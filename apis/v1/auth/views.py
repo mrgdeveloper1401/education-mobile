@@ -4,6 +4,7 @@ import random
 from asgiref.sync import sync_to_async
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
+from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from auth_app.models import User
@@ -12,8 +13,10 @@ from base.utils.custom_throttle import OtpRateThrottle
 from .serializers import RequestOtpSerializer, OtpVerifySerializer
 from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions
 from apis.utils.custom_response import response
+# from .swagger_docs import otp_api_documentation
 
 
+# @otp_api_documentation()
 class RequestOtpView(AsyncAPIView):
     serializer_class = RequestOtpSerializer
     permission_classes = (AsyncRemoveAuthenticationPermissions,)

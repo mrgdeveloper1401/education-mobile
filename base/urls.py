@@ -30,6 +30,7 @@ urlpatterns = [
 
     # api
     path("v1/api/auth/",  include("apis.v1.auth.urls", namespace="v1_auth")),
+    path("v1/api/course/", include("apis.v1.course.urls", namespace="v1_course")),
 ]
 
 SHOW_DEBUGGER_TOOLBAR = config("SHOW_DEBUGGER_TOOLBAR", cast=bool, default=True)

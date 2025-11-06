@@ -37,7 +37,8 @@ INSTALLED_APPS = [
 
     # app
     "auth_app",
-    "core_app"
+    "core_app",
+    "course_app",
 
 ]
 
