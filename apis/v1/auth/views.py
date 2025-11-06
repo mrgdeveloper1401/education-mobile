@@ -47,7 +47,7 @@ class RequestOtpView(AsyncAPIView):
         return response(
             status=True,
             message="پردازش با موفقیت انجام شد",
-            error=None,
+            error=False,
             status_code=201,
             data=data,
         )
