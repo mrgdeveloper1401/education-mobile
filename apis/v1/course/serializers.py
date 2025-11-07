@@ -15,7 +15,7 @@ class ListCategorySerializer(serializers.ModelSerializer):
 class ListClassSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source="course.course_name", read_only=True)
     project_counter = serializers.CharField(source="course.project_counter", read_only=True)
-    course_image = serializers.CharField(source="course.course_image", read_only=True)
+    course_image = serializers.SerializerMethodField()
 
     class Meta:
         model = LessonCourse
@@ -27,6 +27,9 @@ class ListClassSerializer(serializers.ModelSerializer):
             "project_counter",
             "course_image",
         )
+
+    def get_course_image(self, obj):
+        return obj.course.course_image.url if obj.course.course_image else None
 
 
 class SectionLessonCourseSerializer(serializers.ModelSerializer):

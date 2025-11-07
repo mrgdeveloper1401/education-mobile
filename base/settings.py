@@ -200,7 +200,7 @@ if DEBUG is False:
     CORS_ALLOWED_ORIGINS = config("PRODUCTION_CORS_ALLOWED_ORIGINS", cast=Csv())
 
 # config session cache
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # whitenoise
 if config("USER_WHITENOISE", cast=bool, default=True):
