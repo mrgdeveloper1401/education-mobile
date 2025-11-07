@@ -83,7 +83,7 @@ DATABASES = {
         "PASSWORD": config("POSTDB_PASSWORD", cast=str, default="postgres"),
         "HOST": config("POSTDB_HOST", cast=str, default="127.0.0.1"),
         "PORT": config("POSTDB_PORT", cast=int, default=5434),
-        "CONN_MAX_AGE": config("POSTDB_CONN_MAX_AGE", cast=int, default=None),
+        "CONN_MAX_AGE": config("POSTDB_CONN_MAX_AGE", cast=int, default=300),
     }
 }
 
