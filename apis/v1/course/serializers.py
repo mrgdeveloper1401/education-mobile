@@ -1,17 +1,6 @@
 from rest_framework import serializers
 
-from course_app.models import Course, Category, LessonCourse, Section
-
-
-class ListDetailCourseSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source="category.category_name", read_only=True)
-
-    class Meta:
-        model = Course
-        exclude = (
-            "is_deleted",
-            "deleted_at"
-        )
+from course_app.models import Category, LessonCourse, Section
 
 
 class ListCategorySerializer(serializers.ModelSerializer):

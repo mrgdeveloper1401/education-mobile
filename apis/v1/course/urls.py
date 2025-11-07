@@ -5,7 +5,6 @@ from . import views
 
 app_name = "v1_course"
 router = SimpleRouter()
-# router.register("list_detail_course", views.ListDetailCourseView, basename="list_detail_course")
 router.register("lesson_course", views.ListLessonClassView, basename="lesson_course")
 
 lesson_course_router = NestedSimpleRouter(router, r"lesson_course", lookup="lesson_course")

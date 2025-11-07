@@ -1,29 +1,8 @@
 from rest_framework import mixins, viewsets, permissions, generics
 
 from . import serializers
-from course_app.models import Course, Category, LessonCourse, Section
+from course_app.models import Category, LessonCourse, Section
 from ...utils.custom_pagination import TwentyPageNumberPagination
-
-
-class ListDetailCourseView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    serializer_class = serializers.ListDetailCourseSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get_queryset(self):
-        return Course.objects.filter(
-            is_publish=True
-        ).defer(
-            "is_deleted",
-            "deleted_at"
-        ).select_related(
-            "category"
-        )
-
-    def filter_queryset(self, queryset):
-        category_id = self.request.query_params.get("category_id", None)
-        if category_id:
-            queryset = queryset.filter(category_id=category_id)
-        return queryset
 
 
 class ListCategoryView(generics.ListAPIView):
