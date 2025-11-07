@@ -79,7 +79,7 @@ ASGI_APPLICATION = "base.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": config("PGDB_ENGINE", default="django.db.backends.postgresql", cast=str),
-        "NAME": config("POSTDB_NAME", cast=str, default="backup_educationdb"),
+        "NAME": config("POSTDB_NAME", cast=str, default="new_postgres"),
         "USER": config("POSTDB_USER", cast=str, default="postgres"),
         "PASSWORD": config("POSTDB_PASSWORD", cast=str, default="postgres"),
         "HOST": config("POSTDB_HOST", cast=str, default="127.0.0.1"),

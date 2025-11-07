@@ -42,6 +42,14 @@ class User(AbstractBaseUser, UpdateMixin, SoftDeleteMixin, CreateMixin):
 
     grade = models.CharField(_("grade"), max_length=8, choices=Grade.choices, blank=True, null=True)
     school = models.CharField(_("نام مدرسه"), max_length=30, blank=True, null=True)
+    is_superuser = models.BooleanField(
+        _("superuser status"),
+        default=False,
+        help_text=_(
+            "Designates that this user has all permissions without "
+            "explicitly assigning them."
+        ),
+    )
 
     @property
     def get_full_name(self):

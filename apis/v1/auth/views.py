@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import mixins, viewsets, permissions
 
-from auth_app.models import User
+from auth_app.models import User, Student
 from base.clasess.send_sms import SendSms
 from base.utils.custom_throttle import OtpRateThrottle
 from .serializers import RequestOtpSerializer, OtpVerifySerializer, ProfileSerializer
@@ -23,6 +23,8 @@ class RequestOtpView(AsyncAPIView):
     throttle_classes = (OtpRateThrottle,)
 
     async def post(self, request):
+        # import ipdb
+        # ipdb.set_trace()
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -31,6 +33,8 @@ class RequestOtpView(AsyncAPIView):
 
         # get or create user
         user, created = await User.objects.aget_or_create(mobile_phone=phone)
+        if created:
+            await Student.objects.acreate(user_id=user.id)
 
         # set key in redis
         get_ip = request.META.get('REMOTE_ADDR', "X-FORWARDED-FOR")
