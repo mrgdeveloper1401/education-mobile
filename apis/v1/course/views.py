@@ -24,12 +24,14 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
         return LessonCourse.objects.filter(
             is_active=True,
             for_mobile=True
-        ).select_related("course").only(
+        ).select_related("course__category").only(
+            "course__category__category_name",
             "course__course_name",
             "course__project_counter",
             "course__course_image",
             "for_mobile",
-            "class_name"
+            "class_name",
+            "progress"
         )
 
 
