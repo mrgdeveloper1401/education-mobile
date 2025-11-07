@@ -1,0 +1,68 @@
+services:
+#  db:
+#    container_name: education_mobile_db
+#    image: docker.arvancloud.ir/postgres:17-alpine
+#    restart: always
+#    env_file: "postdb.dn"
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    expose:
+#      - 5432
+#    healthcheck:
+#      test: ['CMD', "pg_isready -U postgres"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+
+  backend:
+    env_file: ".env"
+    container_name: education-mobile
+    volumes:
+      - static_files:/home/app/static
+    build:
+      context: .
+      dockerfile: dockerfile/prod/Dockerfile
+    restart: always
+    ports:
+      - "8001:8000"
+    healthcheck:
+      test: ['CMD', 'curl', "-f", "http:localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+#  redis:
+#    container_name: education_mobile_redis
+#    image: docker.arvancloud.ir/redis:8.2-alpine
+#    restart: always
+#    expose:
+#      - 6379
+#    ports:
+#      - "6380:6379"
+#    command: redis-server --save 60 1 --loglevel warning
+#    healthcheck:
+#      test: ['CMD', "redis-cli", "ping"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  nginx:
+#    container_name: education_mobile_nginx
+#    image: docker.arvancloud.ir/nginx:1.29-alpine
+#    ports:
+#      - "443:443"
+#      - "80:80"
+#    depends_on:
+#      - backend
+#    volumes:
+#      - static_files:/var/www/static
+#    healthcheck:
+#      test: ['CMD', "nginx", "-t"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+
+
+volumes:
+  static_files:
+  postgres_data:

@@ -12,3 +12,4 @@ test_code.py
 .env
 general_log_django
 .idea
+postdb.env
