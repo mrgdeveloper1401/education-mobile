@@ -70,6 +70,7 @@ class LessonCourse(CreateMixin, UpdateMixin, SoftDeleteMixin):
         default=ProgresChoices.not_started,
         null=True
     )
+    for_mobile = models.BooleanField(default=False)
 
     class Meta:
         managed = False
