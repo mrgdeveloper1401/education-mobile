@@ -13,3 +13,4 @@ test_code.py
 general_log_django
 .idea
 postdb.env
+.env.backup

@@ -83,6 +83,7 @@ DATABASES = {
         "PASSWORD": config("POSTDB_PASSWORD", cast=str, default="postgres"),
         "HOST": config("POSTDB_HOST", cast=str, default="127.0.0.1"),
         "PORT": config("POSTDB_PORT", cast=int, default=5434),
+        "CONN_MAX_AGE": config("POSTDB_CONN_MAX_AGE", cast=int, default=None),
     }
 }
 
@@ -125,7 +126,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
 
-STATIC_ROOT = BASE_DIR / "static"
+STATIC_ROOT = BASE_DIR / "mobile_static"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
