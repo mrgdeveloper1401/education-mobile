@@ -8,4 +8,4 @@ RUN chmod +x ./scripts/*
 
 EXPOSE 8000
 
-#ENTRYPOINT ["./scripts/start.sh"]
+ENTRYPOINT ["/home/app/scripts/start.sh"]
