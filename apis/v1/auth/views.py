@@ -1,22 +1,22 @@
+import datetime
 import time
 import random
 
-from asgiref.sync import sync_to_async
+from pytz import timezone as pytz_timezone
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
-from django.utils.decorators import method_decorator
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import mixins, viewsets, permissions
 
 from auth_app.models import User
 from base.clasess.send_sms import SendSms
 from base.utils.custom_throttle import OtpRateThrottle
-from .serializers import RequestOtpSerializer, OtpVerifySerializer
+from .serializers import RequestOtpSerializer, OtpVerifySerializer, ProfileSerializer
 from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions
 from apis.utils.custom_response import response
-# from .swagger_docs import otp_api_documentation
+from base.settings import SIMPLE_JWT
 
-
-# @otp_api_documentation()
 class RequestOtpView(AsyncAPIView):
     serializer_class = RequestOtpSerializer
     permission_classes = (AsyncRemoveAuthenticationPermissions,)
@@ -91,10 +91,16 @@ class OtpVerifyView(AsyncAPIView):
                 )
             else:
                 token = RefreshToken.for_user(user)
+                iran_timezone = pytz_timezone("Asia/Tehran")
+                expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
+                expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
                 data = {
                     "mobile": phone,
                     "access_token": str(token.access_token),
-                    "refresh_token": str(token)
+                    "refresh_token": str(token),
+                    "jwt": "Bearer",
+                    "expire_timestamp_access_token": expire_timestamp,
+                    "expire_date_access_token": expire_date
                 }
                 await cache.adelete(redis_key)
                 return response(
@@ -104,3 +110,27 @@ class OtpVerifyView(AsyncAPIView):
                     status_code=200,
                     data=data
                 )
+
+
+class UserProfileView(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+    serializer_class = ProfileSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset.first())
+        return Response(serializer.data)
+
+    def get_queryset(self):
+        return User.objects.filter(id=self.request.user.id).only(
+            "first_name",
+            "last_name",
+            "bio",
+            "image"
+        )

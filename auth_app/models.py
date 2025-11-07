@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin, UserManager
 from django.db import models
@@ -30,6 +32,7 @@ class User(AbstractBaseUser, UpdateMixin, SoftDeleteMixin, CreateMixin):
     address = models.TextField(_("ادرس"), blank=True, null=True)
     is_coach = models.BooleanField(_('به عنوان مربی'), default=False)
     birth_date = models.DateField(_("تاریخ نولد"), blank=True, null=True)
+    bio = models.CharField(max_length=500, blank=True, null=True)
 
     class Gender(models.TextChoices):
         MALE = 'male', _("پسر")
@@ -86,3 +89,54 @@ class City(models.Model):
     class Meta:
         managed = False
         db_table = "city"
+
+
+class Coach(CreateMixin, UpdateMixin, SoftDeleteMixin):
+    user = models.OneToOneField(User, on_delete=models.DO_NOTHING, related_name='coach')
+    coach_number = models.CharField(max_length=15, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.coach_number
+
+    @property
+    def get_coach_name(self):
+        return self.user.get_full_name
+
+    @property
+    def get_coach_phone(self):
+        return self.user.mobile_phone
+
+    class Meta:
+        managed = False
+        db_table = 'coach'
+
+
+class Student(CreateMixin, UpdateMixin, SoftDeleteMixin):
+    user = models.OneToOneField(User, on_delete=models.DO_NOTHING, related_name='student',
+                                limit_choices_to={"is_coach": False})
+    student_number = models.CharField(max_length=11)
+    referral_code = models.CharField(max_length=30, blank=True, db_index=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.student_number
+
+    @property
+    def student_name(self):
+        return self.user.get_full_name
+
+    @property
+    def get_student_phone(self):
+        return self.user.mobile_phone
+
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            self.referral_code = uuid.uuid4().hex[:30]
+            while Student.objects.filter(referral_code=self.referral_code).exists():
+                self.referral_code = uuid.uuid4().hex[:30]
+        super().save(*args, **kwargs)
+
+    class Meta:
+        db_table = 'student'
+        managed = False

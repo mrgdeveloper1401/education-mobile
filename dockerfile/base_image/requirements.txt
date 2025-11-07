@@ -70,3 +70,4 @@ wcwidth==0.2.14
 whitenoise==6.11.0
 django-storages==1.14.6
 boto3==1.40.68
+pytz==2025.2
