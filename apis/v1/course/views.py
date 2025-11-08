@@ -1,7 +1,9 @@
+from django.db.models import Prefetch
 from rest_framework import mixins, viewsets, permissions, generics
+from rest_framework.exceptions import NotFound
 
 from . import serializers
-from course_app.models import Category, LessonCourse, Section
+from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, SectionFile
 from ...utils.custom_pagination import TwentyPageNumberPagination
 
 
@@ -40,12 +42,43 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Section.objects.filter(
+        base_query = Section.objects.filter(
             is_publish=True,
             course__lesson_course__exact=self.kwargs["lesson_course_pk"]
-        ).only(
-            "title",
-            "cover_image",
-            "is_last_section",
-            "description",
         )
+        if self.action == "list":
+            return base_query.only(
+                "title",
+                "cover_image",
+                "is_last_section",
+                "description",
+            )
+        elif self.action == "retrieve":
+            return base_query.prefetch_related(
+                Prefetch(
+                    "section_videos", SectionVideo.objects.filter(
+                        is_publish=True
+                    ).only(
+                        "section_id", "video", "title", "video_url"
+                    ),
+                ),
+                Prefetch(
+                    "section_files", SectionFile.objects.filter(
+                        is_publish=True
+                    ).only(
+                        "section_id", "title", "zip_file", "file_type"
+                    )
+                )
+            ).only(
+                "title",
+                "cover_image",
+                "is_last_section",
+                "description",
+            )
+        else:
+            raise NotFound()
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return serializers.DetailSectionLessonCourseSerializer
+        return super().get_serializer_class()

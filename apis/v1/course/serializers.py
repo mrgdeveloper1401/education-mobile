@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from course_app.models import Category, LessonCourse, Section
+from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, SectionFile
 
 
 class ListCategorySerializer(serializers.ModelSerializer):
@@ -45,3 +45,38 @@ class SectionLessonCourseSerializer(serializers.ModelSerializer):
             "is_last_section",
             "description"
         )
+
+
+class SectionVideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SectionVideo
+        fields = ("id", "title", "video", "video_url", "is_publish")
+
+
+class SectionFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SectionFile
+        fields = ("id", "title", "zip_file", "file_type", "answer", "is_publish")
+
+
+class DetailSectionLessonCourseSerializer(serializers.ModelSerializer):
+    section_videos = SectionVideoSerializer(many=True, read_only=True)
+    section_files = SectionFileSerializer(many=True, read_only=True)
+    has_access = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Section
+        fields = (
+            "id",
+            "title",
+            "description",
+            "cover_image",
+            "is_last_section",
+            "section_videos",
+            "section_files",
+            "has_access",
+        )
+
+    def get_has_access(self, obj):
+        user_id = self.context['request'].user.id
+        return obj.student_section.filter(student__user_id=user_id, is_access=True).exists()
