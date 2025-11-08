@@ -8,10 +8,12 @@ from adrf.views import APIView as AsyncAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import mixins, viewsets, permissions
+from asgiref.sync import sync_to_async
 
 from auth_app.models import User, Student
 from base.clasess.send_sms import SendSms
 from base.utils.custom_throttle import OtpRateThrottle
+from base.utils.grand_section_access import grant_mobile_sections_access
 from .serializers import RequestOtpSerializer, OtpVerifySerializer, ProfileSerializer
 from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions
 from apis.utils.custom_response import response
@@ -105,6 +107,7 @@ class OtpVerifyView(AsyncAPIView):
                     "expire_date_access_token": expire_date
                 }
                 await cache.adelete(redis_key)
+                await sync_to_async(grant_mobile_sections_access)(user.id) # access two section into user
                 return response(
                     status=True,
                     message="پردازش با موفقیت انجام شد",
