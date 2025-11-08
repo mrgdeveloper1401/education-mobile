@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, SectionFile
@@ -31,6 +32,7 @@ class ListClassSerializer(serializers.ModelSerializer):
             "progress",
         )
 
+    @extend_schema_field(serializers.URLField())
     def get_course_image(self, obj):
         return obj.course.course_image.url if obj.course.course_image else None
 
@@ -77,6 +79,7 @@ class DetailSectionLessonCourseSerializer(serializers.ModelSerializer):
             "has_access",
         )
 
+    @extend_schema_field(serializers.BooleanField())
     def get_has_access(self, obj):
         user_id = self.context['request'].user.id
         return obj.student_section.filter(student__user_id=user_id, is_access=True).exists()

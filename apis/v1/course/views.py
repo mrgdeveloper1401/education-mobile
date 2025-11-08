@@ -1,4 +1,6 @@
 from django.db.models import Prefetch
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins, viewsets, permissions, generics
 from rest_framework.exceptions import NotFound
 
@@ -34,12 +36,44 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
             "for_mobile",
             "class_name",
             "progress"
-        )
+        ).order_by("-id")
 
 
 class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = serializers.SectionLessonCourseSerializer
     permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='lesson_course_pk',
+                type=int,
+                location=OpenApiParameter.PATH,
+                description='ID of the lesson course'
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='lesson_course_pk',
+                type=int,
+                location=OpenApiParameter.PATH,
+                description='ID of the lesson course'
+            ),
+            OpenApiParameter(
+                name="id",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description='ID of the section'
+            )
+        ]
+    )
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
         base_query = Section.objects.filter(
