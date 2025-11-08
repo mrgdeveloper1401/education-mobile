@@ -203,7 +203,7 @@ if DEBUG is False:
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # whitenoise
-if config("USER_WHITENOISE", cast=bool, default=True):
+if config("USE_WHITENOISE", cast=bool, default=True):
     MIDDLEWARE += [
         "whitenoise.middleware.WhiteNoiseMiddleware"
     ]
@@ -220,7 +220,7 @@ STORAGES = {
         }
 }
 
-if config("USER_LOG", cast=bool, default=True):
+if config("USE_LOG", cast=bool, default=True):
     log_dir = os.path.join('general_log_django', timezone.now().strftime("%Y-%m-%d"))
     os.makedirs(log_dir, exist_ok=True)
     LOGGING = {
@@ -320,10 +320,10 @@ SPECTACULAR_SETTINGS = {
 AUTH_USER_MODEL = "auth_app.User"
 
 # config django storage
-AWS_ACCESS_KEY_ID = config('ARVAN_AWS_ACCESS_KEY_ID', cast=str)
-AWS_SECRET_ACCESS_KEY = config('ARVAN_AWS_SECRET_ACCESS_KEY', cast=str)
-AWS_STORAGE_BUCKET_NAME = config('ARVAN_AWS_STORAGE_BUCKET_NAME', cast=str)
-AWS_S3_ENDPOINT_URL = config('ARVAN_AWS_S3_ENDPOINT_URL', cast=str)
+AWS_ACCESS_KEY_ID = config('ARVAN_AWS_ACCESS_KEY_ID', cast=str, default='salam')
+AWS_SECRET_ACCESS_KEY = config('ARVAN_AWS_SECRET_ACCESS_KEY', cast=str, default='salam')
+AWS_STORAGE_BUCKET_NAME = config('ARVAN_AWS_STORAGE_BUCKET_NAME', cast=str, default='salam')
+AWS_S3_ENDPOINT_URL = config('ARVAN_AWS_S3_ENDPOINT_URL', cast=str, default='http://localhost:8000')
 AWS_S3_REGION_NAME = 'us-east-1'
 AWS_DEFAULT_ACL = 'public-read'
 AWS_QUERYSTRING_AUTH = False

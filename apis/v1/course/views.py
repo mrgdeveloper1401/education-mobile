@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Exists, OuterRef
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins, viewsets, permissions, generics
@@ -86,6 +86,19 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
                 "cover_image",
                 "is_last_section",
                 "description",
+            ).annotate(
+                has_access=Exists(
+                    StudentAccessSection.objects.filter(
+                        section_id=OuterRef("id"),
+                        student__user_id=self.request.user.id,
+                        is_access=True
+                    )
+                )
+            ).prefetch_related(
+                Prefetch(
+                    "student_section",
+                    queryset=StudentAccessSection.objects.only("section_id", "is_access")
+                )
             )
         elif self.action == "retrieve":
             return base_query.prefetch_related(

@@ -23,8 +23,6 @@ class RequestOtpView(AsyncAPIView):
     throttle_classes = (OtpRateThrottle,)
 
     async def post(self, request):
-        # import ipdb
-        # ipdb.set_trace()
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 

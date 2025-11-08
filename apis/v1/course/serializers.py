@@ -38,6 +38,8 @@ class ListClassSerializer(serializers.ModelSerializer):
 
 
 class SectionLessonCourseSerializer(serializers.ModelSerializer):
+    has_access = serializers.SerializerMethodField()
+
     class Meta:
         model = Section
         fields = (
@@ -45,14 +47,24 @@ class SectionLessonCourseSerializer(serializers.ModelSerializer):
             "title",
             "cover_image",
             "is_last_section",
-            "description"
+            "description",
+            "has_access"
         )
+
+    @extend_schema_field(serializers.BooleanField())
+    def get_has_access(self, obj):
+        return obj.has_access
 
 
 class SectionVideoSerializer(serializers.ModelSerializer):
+    video_field_url = serializers.SerializerMethodField()
+
     class Meta:
         model = SectionVideo
-        fields = ("id", "title", "video", "video_url", "is_publish")
+        fields = ("id", "title", "video_field_url", "video_url", "is_publish")
+
+    def get_video_field_url(self, obj):
+        return obj.video.url if obj.video else None
 
 
 class SectionFileSerializer(serializers.ModelSerializer):
