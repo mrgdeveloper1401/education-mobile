@@ -1,11 +1,10 @@
 from django.db.models import Prefetch, Exists, OuterRef
-from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins, viewsets, permissions, generics
 from rest_framework.exceptions import NotFound
 
 from . import serializers
-from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, SectionFile
+from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo
 from ...utils.custom_pagination import TwentyPageNumberPagination
 
 
@@ -13,7 +12,7 @@ class ListCategoryView(generics.ListAPIView):
     serializer_class = serializers.ListCategorySerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Category.objects.filter(
-        is_publish=True
+        is_active=True
     ).only(
         "category_name",
     )
@@ -77,7 +76,7 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
 
     def get_queryset(self):
         base_query = Section.objects.filter(
-            is_publish=True,
+            is_active=True,
             course__lesson_course__exact=self.kwargs["lesson_course_pk"]
         )
         if self.action == "list":
@@ -104,18 +103,11 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
             return base_query.prefetch_related(
                 Prefetch(
                     "section_videos", SectionVideo.objects.filter(
-                        is_publish=True
+                        is_active=True
                     ).only(
                         "section_id", "video", "title", "video_url"
                     ),
                 ),
-                Prefetch(
-                    "section_files", SectionFile.objects.filter(
-                        is_publish=True
-                    ).only(
-                        "section_id", "title", "zip_file", "file_type"
-                    )
-                )
             ).only(
                 "title",
                 "cover_image",

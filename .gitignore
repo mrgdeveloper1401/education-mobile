@@ -14,3 +14,4 @@ general_log_django
 .idea
 postdb.env
 .env.backup
+media

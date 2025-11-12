@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "drf_spectacular",
     'drf_spectacular_sidecar',
+    "treebeard",
 
     # app
     "auth_app",
@@ -79,12 +80,12 @@ ASGI_APPLICATION = "base.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": config("PGDB_ENGINE", default="django.db.backends.postgresql", cast=str),
-        "NAME": config("POSTDB_NAME", cast=str, default="new_postgres"),
+        "NAME": config("POSTDB_NAME", cast=str, default="education_mobile"),
         "USER": config("POSTDB_USER", cast=str, default="postgres"),
         "PASSWORD": config("POSTDB_PASSWORD", cast=str, default="postgres"),
         "HOST": config("POSTDB_HOST", cast=str, default="127.0.0.1"),
         "PORT": config("POSTDB_PORT", cast=int, default=5434),
-        # "CONN_MAX_AGE": config("POSTDB_CONN_MAX_AGE", cast=int, default=300),
+        "CONN_MAX_AGE": config("POSTDB_CONN_MAX_AGE", cast=int, default=60),
     }
 }
 
@@ -119,16 +120,10 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
-
-STATIC_ROOT = BASE_DIR / "mobile_static"
-MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -146,8 +141,9 @@ if SHOW_DEBUGGER_TOOLBAR:
     ]
     INTERNAL_IPS = ["127.0.0.1"]
 
+USE_SSL_CONFIG = config("USE_SSL_CONFIG", cast=bool, default=False)
 
-if config("USE_SSL_CONFIG", cast=bool, default=False):
+if USE_SSL_CONFIG:
     # Https/ssl settings
     SECURE_SSL_REDIRECT = True # redirec http request into https request
     USE_X_FORWARDED_HOST = True # use header x-forwarded-host
@@ -195,30 +191,36 @@ else:
     CACHES['default']['LOCATION'] = config("PRODU_REDIS_LOCATION", cast=str)
 
 
-# config package corsheaders
-if DEBUG is False:
-    CORS_ALLOWED_ORIGINS = config("PRODUCTION_CORS_ALLOWED_ORIGINS", cast=Csv())
-
-# config session cache
-# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-
-# whitenoise
-if config("USE_WHITENOISE", cast=bool, default=True):
-    MIDDLEWARE += [
-        "whitenoise.middleware.WhiteNoiseMiddleware"
-    ]
-
 # config storages
 STORAGES = {
     'default':
         {
-            'BACKEND': config("STORAGE_BACKEND", cast=str, default='django.core.files.storage.FileSystemStorage'),
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
         },
     'staticfiles':
         {
-            'BACKEND': config("STORAGE_STATIC_FILES", cast=str, default='whitenoise.storage.CompressedManifestStaticFilesStorage'),
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
         }
 }
+
+# config package cors headers
+if DEBUG is False:
+    CORS_ALLOWED_ORIGINS = config("PRODUCTION_CORS_ALLOWED_ORIGINS", cast=Csv())
+
+# whitenoise
+if config("USE_WHITENOISE", cast=bool, default=False):
+    MIDDLEWARE += [
+        "whitenoise.middleware.WhiteNoiseMiddleware"
+    ]
+    STORAGES['staticfiles']['BACKEND'] = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
+USE_DJANGO_STORAGES = config("USE_DJANGO_STORAGES", cast=bool, default=False)
+if USE_DJANGO_STORAGES:
+    STORAGES['default']['BACKEND'] = 'storages.backends.s3.S3Storage'
+else:
+    STATIC_ROOT = BASE_DIR / "mobile_static"
+    MEDIA_ROOT = BASE_DIR / "media"
 
 if config("USE_LOG", cast=bool, default=True):
     log_dir = os.path.join('general_log_django', timezone.now().strftime("%Y-%m-%d"))
@@ -260,7 +262,6 @@ if config("USE_LOG", cast=bool, default=True):
             }
         }
     }
-
 
 # rest config
 REST_FRAMEWORK = {
@@ -327,3 +328,7 @@ AWS_S3_ENDPOINT_URL = config('ARVAN_AWS_S3_ENDPOINT_URL', cast=str, default='htt
 AWS_S3_REGION_NAME = 'us-east-1'
 AWS_DEFAULT_ACL = 'public-read'
 AWS_QUERYSTRING_AUTH = False
+
+
+# cache session
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"

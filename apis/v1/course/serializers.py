@@ -1,7 +1,7 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, SectionFile
+from course_app.models import Category, LessonCourse, Section, SectionVideo
 
 
 class ListCategorySerializer(serializers.ModelSerializer):
@@ -67,15 +67,8 @@ class SectionVideoSerializer(serializers.ModelSerializer):
         return obj.video.url if obj.video else None
 
 
-class SectionFileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SectionFile
-        fields = ("id", "title", "zip_file", "file_type", "answer", "is_publish")
-
-
 class DetailSectionLessonCourseSerializer(serializers.ModelSerializer):
     section_videos = SectionVideoSerializer(many=True, read_only=True)
-    section_files = SectionFileSerializer(many=True, read_only=True)
     has_access = serializers.SerializerMethodField()
 
     class Meta:
