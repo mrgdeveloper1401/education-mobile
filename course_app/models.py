@@ -180,12 +180,3 @@ class StudentAccessSection(CreateMixin, UpdateMixin):
     class Meta:
         ordering = ("id",)
         db_table = "student_access_section"
-
-
-# class SectionExam(CreateMixin, UpdateMixin):
-#     section = models.ForeignKey(
-#         Section,
-#         related_name="section_exams",
-#         on_delete=models.PROTECT,
-#     )
-#

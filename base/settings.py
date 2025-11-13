@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "auth_app",
     "core_app",
     "course_app",
+    "exam_app",
 
 ]
 
