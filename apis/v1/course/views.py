@@ -2,13 +2,14 @@ from django.db.models import Prefetch, Exists, OuterRef
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins, viewsets, permissions, generics
 from rest_framework.exceptions import NotFound
-from adrf.mixins import ListModelMixin, RetrieveModelMixin
+from adrf.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
 from adrf.viewsets import GenericViewSet as AdrfGenericViewSet
 from adrf.generics import ListAPIView as AdrfListAPIView
 
-from exam_app.models import SectionExam, Question, Choice
+from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt
 from . import serializers
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo
+from .serializers import StudentExamAttemptSerializer
 from ...utils.custom_pagination import TwentyPageNumberPagination
 from ...utils.custom_permissions import AsyncIsAuthenticated
 
@@ -213,4 +214,18 @@ class QuestionView(AdrfListAPIView):
                 "choices",
                 queryset=Choice.objects.filter(is_active=True).only("question_id", "choice_text"),
             )
+        )
+
+
+class ListCreateStudentExamAttemptView(
+    ListModelMixin,
+    CreateModelMixin,
+    AdrfGenericViewSet
+):
+    serializer_class = StudentExamAttemptSerializer
+    permission_classes = (AsyncIsAuthenticated,)
+
+    def get_queryset(self):
+        return StudentExamAttempt.objects.filter(
+            student__user_id=self.request.user.id,
         )

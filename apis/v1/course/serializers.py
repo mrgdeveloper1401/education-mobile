@@ -1,9 +1,12 @@
+from asgiref.sync import sync_to_async
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
+from rest_framework.exceptions import NotFound
 
+from auth_app.models import Student
 from course_app.models import Category, LessonCourse, Section, SectionVideo
-from exam_app.models import SectionExam, Question, Choice
+from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt
 
 
 class ListCategorySerializer(serializers.ModelSerializer):
@@ -136,3 +139,36 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
             "display_order",
             "choices"
         )
+
+
+class StudentExamAttemptSerializer(AdrfModelSerializer):
+    class Meta:
+        model = StudentExamAttempt
+        exclude = ("is_active",)
+        extra_kwargs = {
+            "started_at": {"read_only": True},
+            "submitted_at": {"read_only": True},
+            "total_score": {"read_only": True},
+            "obtained_score": {"read_only": True},
+            "status": {"read_only": True},
+            "is_active": {"read_only": True},
+            "student": {"read_only": True},
+            "is_passed": {"read_only": True},
+            "exam": {"read_only": True},
+        }
+
+
+    async def acreate(self, validated_data):
+        user = await self.context['request'].user
+        exam_pk = self.context["exam_pk"]
+        user_id = user.id
+
+        get_student = await sync_to_async(Student.objects.filter)(user_id=user_id, is_active=True)
+        if not await get_student.aexists():
+            return NotFound()
+        else:
+            create_exam_attempt = StudentExamAttempt.objects.acreate(
+                student_id=get_student.id,
+                exam_id=exam_pk
+            )
+            return create_exam_attempt
