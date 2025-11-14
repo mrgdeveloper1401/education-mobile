@@ -82,7 +82,7 @@ class Photo(CreateMixin, UpdateMixin):
         ordering = ('-id',)
 
     @property
-    def get_image_url(self):
+    def course_image(self):
         return self.image.url if self.image else None
 
     def calc_image_format(self):
@@ -186,3 +186,7 @@ class Video(CreateMixin, UpdateMixin):
     def has_url(self):
         """آیا لینک ویدیو دارد؟"""
         return bool(self.video_url)
+
+    @property
+    def get_video_file_url(self):
+        return self.video_file.url

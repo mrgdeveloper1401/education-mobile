@@ -2,10 +2,14 @@ from django.db.models import Prefetch, Exists, OuterRef
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins, viewsets, permissions, generics
 from rest_framework.exceptions import NotFound
+from adrf.mixins import ListModelMixin, RetrieveModelMixin
+from adrf.viewsets import GenericViewSet as AdrfGenericViewSet
 
+from exam_app.models import SectionExam
 from . import serializers
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo
 from ...utils.custom_pagination import TwentyPageNumberPagination
+from ...utils.custom_permissions import AsyncIsAuthenticated
 
 
 class ListCategoryView(generics.ListAPIView):
@@ -26,13 +30,13 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     def get_queryset(self):
         return LessonCourse.objects.filter(
             is_active=True,
-            # for_mobile=True
-        ).select_related("course__category").only(
+        ).select_related("course__category", "course__course_image").only(
             "course__category__category_name",
             "course__course_name",
             "course__project_counter",
-            "course__course_image",
-            # "for_mobile",
+            "course__course_image__image",
+            "course__course_image__height",
+            "course__course_image__width",
             "class_name",
             "progress"
         ).order_by("-id")
@@ -78,14 +82,7 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
         base_query = Section.objects.filter(
             is_active=True,
             course__lesson_course__exact=self.kwargs["lesson_course_pk"]
-        )
-        if self.action == "list":
-            return base_query.only(
-                "title",
-                "cover_image",
-                "is_last_section",
-                "description",
-            ).annotate(
+        ).select_related("cover_image").annotate(
                 has_access=Exists(
                     StudentAccessSection.objects.filter(
                         section_id=OuterRef("id"),
@@ -93,24 +90,31 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
                         is_access=True
                     )
                 )
-            ).prefetch_related(
-                Prefetch(
-                    "student_section",
-                    queryset=StudentAccessSection.objects.only("section_id", "is_access")
-                )
+            )
+        if self.action == "list":
+            return base_query.only(
+                "title",
+                "cover_image",
+                "is_last_section",
+                "description",
+                "cover_image__image",
+                "cover_image__height",
+                "cover_image__width",
             )
         elif self.action == "retrieve":
             return base_query.prefetch_related(
                 Prefetch(
                     "section_videos", SectionVideo.objects.filter(
                         is_active=True
-                    ).only(
-                        "section_id", "video", "title", "video_url"
+                    ).select_related("video").only(
+                        "section_id", "video__video_file", "title"
                     ),
                 ),
             ).only(
                 "title",
-                "cover_image",
+                "cover_image__image",
+                "cover_image__height",
+                "cover_image__width",
                 "is_last_section",
                 "description",
             )
@@ -121,3 +125,69 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
         if self.action == "retrieve":
             return serializers.DetailSectionLessonCourseSerializer
         return super().get_serializer_class()
+
+
+class SectionExamViewSet(
+    ListModelMixin,
+    RetrieveModelMixin,
+    AdrfGenericViewSet
+):
+    serializer_class = serializers.SectionExamSerializer
+    permission_classes = (AsyncIsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='sections_pk',
+                type=int,
+                location=OpenApiParameter.PATH,
+                description='ID of the section_pk'
+            ),
+            OpenApiParameter(
+                name='lesson_course_pk',
+                type=int,
+                location=OpenApiParameter.PATH,
+                description='ID of the lesson course'
+            ),
+        ]
+    )
+    def list(self, *args, **kwargs):
+        return super().list(*args, **kwargs)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='sections_pk',
+                type=int,
+                location=OpenApiParameter.PATH,
+                description='ID of the section_pk'
+            ),
+            OpenApiParameter(
+                name="id",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description='ID of the section'
+            ),
+            OpenApiParameter(
+                name='lesson_course_pk',
+                type=int,
+                location=OpenApiParameter.PATH,
+                description='ID of the lesson course'
+            ),
+        ]
+    )
+    def retrieve(self, *args, **kwargs):
+        return super().retrieve(*args, **kwargs)
+
+    def get_queryset(self):
+        return SectionExam.objects.filter(
+            section_id=self.kwargs["sections_pk"],
+            is_active=True,
+        ).only(
+            "title",
+            "description",
+            "exam_type",
+            "total_score",
+            "passing_score",
+            "time_limit"
+        )
