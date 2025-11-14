@@ -1,4 +1,5 @@
 from adrf.serializers import Serializer as AdrfSerializer, ModelSerializer as AdrfModelSerializer
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
@@ -29,6 +30,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "bio",
         )
 
+    @extend_schema_field(serializers.URLField())
     def get_ser_image_url(self, obj):
         return obj.image.get_image_url if obj.image else None
 
