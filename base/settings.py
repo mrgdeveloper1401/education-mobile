@@ -29,7 +29,6 @@ INSTALLED_APPS = [
 
     # third party
     'rest_framework',
-    'corsheaders',
     "adrf",
     "rest_framework_simplejwt",
     "drf_spectacular",
@@ -45,7 +44,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -72,12 +70,16 @@ TEMPLATES = [
     },
 ]
 
-# WSGI_APPLICATION = 'base.wsgi.application'
+# cors
+USE_CORS = config('USE_CORS', cast=bool, default=True)
+if USE_CORS:
+    INSTALLED_APPS.append('corsheaders')
+    MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+
 ASGI_APPLICATION = "base.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": config("PGDB_ENGINE", default="django.db.backends.postgresql", cast=str),
@@ -86,7 +88,9 @@ DATABASES = {
         "PASSWORD": config("POSTDB_PASSWORD", cast=str, default="postgres"),
         "HOST": config("POSTDB_HOST", cast=str, default="127.0.0.1"),
         "PORT": config("POSTDB_PORT", cast=int, default=5434),
-        "CONN_MAX_AGE": config("POSTDB_CONN_MAX_AGE", cast=int, default=60),
+    },
+    "OPTIONS": {
+        'pool': config("USE_POOL", cast=bool, default=True),
     }
 }
 
@@ -113,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = config("LANGUAGE_CODE", cast=str, default="en-us")
 
 TIME_ZONE = config("TIME_ZONE", cast=str, default="UTC")
 
@@ -143,7 +147,6 @@ if SHOW_DEBUGGER_TOOLBAR:
     INTERNAL_IPS = ["127.0.0.1"]
 
 USE_SSL_CONFIG = config("USE_SSL_CONFIG", cast=bool, default=False)
-
 if USE_SSL_CONFIG:
     # Https/ssl settings
     SECURE_SSL_REDIRECT = True # redirec http request into https request
@@ -182,7 +185,12 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "OPTIONS": {
+            "SERIALIZER": config("SERIALIZER", cast=str, default="django_redis.serializers.msgpack.MSGPackSerializer"),
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": config("REDIS_CONNECTION_MAX_CONNECTIONS", cast=int, default=100),
+                "retry_on_timeout": True
+            }
         }
     }
 }
@@ -219,6 +227,14 @@ if config("USE_WHITENOISE", cast=bool, default=False):
 USE_DJANGO_STORAGES = config("USE_DJANGO_STORAGES", cast=bool, default=False)
 if USE_DJANGO_STORAGES:
     STORAGES['default']['BACKEND'] = 'storages.backends.s3.S3Storage'
+    # config django storage
+    AWS_ACCESS_KEY_ID = config('ARVAN_AWS_ACCESS_KEY_ID', cast=str, default='salam')
+    AWS_SECRET_ACCESS_KEY = config('ARVAN_AWS_SECRET_ACCESS_KEY', cast=str, default='salam')
+    AWS_STORAGE_BUCKET_NAME = config('ARVAN_AWS_STORAGE_BUCKET_NAME', cast=str, default='salam')
+    AWS_S3_ENDPOINT_URL = config('ARVAN_AWS_S3_ENDPOINT_URL', cast=str, default='http://localhost:8000')
+    AWS_S3_REGION_NAME = 'us-east-1'
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_QUERYSTRING_AUTH = False
 else:
     STATIC_ROOT = BASE_DIR / "mobile_static"
     MEDIA_ROOT = BASE_DIR / "media"
@@ -321,15 +337,6 @@ SPECTACULAR_SETTINGS = {
 
 AUTH_USER_MODEL = "auth_app.User"
 
-# config django storage
-AWS_ACCESS_KEY_ID = config('ARVAN_AWS_ACCESS_KEY_ID', cast=str, default='salam')
-AWS_SECRET_ACCESS_KEY = config('ARVAN_AWS_SECRET_ACCESS_KEY', cast=str, default='salam')
-AWS_STORAGE_BUCKET_NAME = config('ARVAN_AWS_STORAGE_BUCKET_NAME', cast=str, default='salam')
-AWS_S3_ENDPOINT_URL = config('ARVAN_AWS_S3_ENDPOINT_URL', cast=str, default='http://localhost:8000')
-AWS_S3_REGION_NAME = 'us-east-1'
-AWS_DEFAULT_ACL = 'public-read'
-AWS_QUERYSTRING_AUTH = False
-
-
 # cache session
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = config("SESSION_CACHE_ALIAS", cast=str, default="default")

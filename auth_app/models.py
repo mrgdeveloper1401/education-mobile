@@ -90,6 +90,7 @@ class User(AbstractBaseUser, UpdateMixin, CreateMixin, PermissionsMixin):
     REQUIRED_FIELDS = ('first_name', "last_name", "email")
 
     class Meta:
+        ordering = ("id",)
         db_table = "users"
 
 

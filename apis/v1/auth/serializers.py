@@ -1,19 +1,23 @@
-from adrf.serializers import Serializer
+from adrf.serializers import Serializer as AdrfSerializer, ModelSerializer as AdrfModelSerializer
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 
 from auth_app.models import User
+from core_app.models import Photo
 
 
-class RequestOtpSerializer(Serializer):
+class RequestOtpSerializer(AdrfSerializer):
     mobile_phone = serializers.CharField()
 
 
-class OtpVerifySerializer(Serializer):
+class OtpVerifySerializer(AdrfSerializer):
     mobile_phone = serializers.CharField()
     otp = serializers.CharField()
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    ser_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
@@ -21,5 +25,30 @@ class ProfileSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "image",
-            "bio"
+            "ser_image_url",
+            "bio",
+        )
+
+    def get_ser_image_url(self, obj):
+        return obj.image.get_image_url if obj.image else None
+
+    def validate_image(self, data):
+        user_id = self.context['request'].user.id
+        image = Photo.objects.filter(
+            id=data.id,
+            upload_by_id=user_id,
+            is_active=True,
+        ).only("id")
+        if not image.exists():
+            raise NotFound()
+        else:
+            return data
+
+
+class UploadImageSerializer(AdrfModelSerializer):
+    class Meta:
+        model = Photo
+        fields = (
+            "id",
+            "image"
         )

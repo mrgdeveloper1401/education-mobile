@@ -5,17 +5,17 @@ import random
 from pytz import timezone as pytz_timezone
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
-from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import mixins, viewsets, permissions
-from asgiref.sync import sync_to_async
+from rest_framework import mixins, viewsets
 
 from auth_app.models import User, Student
 from base.clasess.send_sms import SendSms
 from base.utils.custom_throttle import OtpRateThrottle
 from base.utils.grand_section_access import grant_mobile_sections_access
-from .serializers import RequestOtpSerializer, OtpVerifySerializer, ProfileSerializer
-from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions
+from core_app.models import Photo
+from .serializers import RequestOtpSerializer, OtpVerifySerializer, ProfileSerializer, UploadImageSerializer
+from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, AsyncIsAuthenticated
 from apis.utils.custom_response import response
 from base.settings import SIMPLE_JWT
 
@@ -107,7 +107,7 @@ class OtpVerifyView(AsyncAPIView):
                     "expire_date_access_token": expire_date
                 }
                 await cache.adelete(redis_key)
-                await sync_to_async(grant_mobile_sections_access)(user.id) # access two section into user
+                await grant_mobile_sections_access(user.id) # access two section into user
                 return response(
                     status=True,
                     message="پردازش با موفقیت انجام شد",
@@ -117,25 +117,50 @@ class OtpVerifyView(AsyncAPIView):
                 )
 
 
-class UserProfileView(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class UserProfileView(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
     serializer_class = ProfileSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset.first())
-        return Response(serializer.data)
+    permission_classes = (IsAuthenticated,)
+    queryset = User.objects.only(
+        "first_name",
+        "last_name",
+        "mobile_phone",
+        "image__image",
+        "bio",
+        'image__width',
+        "image__height"
+    ).select_related("image")
 
     def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id).only(
-            "first_name",
-            "last_name",
-            "bio",
-            "image"
+        queryset = self.queryset.filter(id=self.request.user.id)
+        return queryset
+
+
+class UploadImageView(AsyncAPIView):
+    serializer_class = UploadImageSerializer
+    permission_classes = (AsyncIsAuthenticated,)
+
+    async def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        image = serializer.validated_data['image']
+        # create instance
+        image = await Photo.objects.acreate(
+            image=image,
+            upload_by_id=request.user.id,
+
+        )
+        return response(
+            status=True,
+            status_code=201,
+            data={
+                "image_id": image.id,
+            },
+            error=False,
+            message="پردازش با موفقیت انجام شد"
         )

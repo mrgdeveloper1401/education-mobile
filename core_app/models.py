@@ -70,11 +70,20 @@ class Photo(CreateMixin, UpdateMixin):
         default=True,
         verbose_name='فعال'
     )
-
+    upload_by = models.ForeignKey(
+        "auth_app.User",
+        related_name='user_photos',
+        on_delete=models.PROTECT,
+        null=True # TODO, when clean migration remove these filed
+    )
     class Meta:
         verbose_name = 'عکس'
         verbose_name_plural = 'عکس‌ها'
         ordering = ('-id',)
+
+    @property
+    def get_image_url(self):
+        return self.image.url if self.image else None
 
     def calc_image_format(self):
         file_format = self.file_format = what(self.image)

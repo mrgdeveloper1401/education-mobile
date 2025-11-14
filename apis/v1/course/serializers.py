@@ -25,7 +25,7 @@ class ListClassSerializer(serializers.ModelSerializer):
             "id",
             "class_name",
             "course_category",
-            "for_mobile",
+            # "for_mobile",
             "course_name",
             "project_counter",
             "course_image",
@@ -61,7 +61,7 @@ class SectionVideoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SectionVideo
-        fields = ("id", "title", "video_field_url", "video_url", "is_publish")
+        fields = ("id", "title", "video_field_url", "video_url", "is_active")
 
     def get_video_field_url(self, obj):
         return obj.video.url if obj.video else None

@@ -8,7 +8,7 @@ from .models import User, Coach, Student
 async def create_profile(sender, instance, created, **kwargs):
     if created and instance.is_coach:
         await Coach.objects.acreate(user=instance)
-    else:
+    if created and not instance.is_coach:
         await Student.objects.acreate(user=instance)
 
 

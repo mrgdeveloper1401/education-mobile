@@ -26,13 +26,13 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     def get_queryset(self):
         return LessonCourse.objects.filter(
             is_active=True,
-            for_mobile=True
+            # for_mobile=True
         ).select_related("course__category").only(
             "course__category__category_name",
             "course__course_name",
             "course__project_counter",
             "course__course_image",
-            "for_mobile",
+            # "for_mobile",
             "class_name",
             "progress"
         ).order_by("-id")
