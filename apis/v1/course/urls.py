@@ -1,4 +1,5 @@
 from rest_framework_nested.routers import SimpleRouter, NestedSimpleRouter
+from rest_framework.urls import path
 from . import views
 
 
@@ -14,4 +15,5 @@ section_router.register("exam", views.SectionExamViewSet, basename="exam")
 
 urlpatterns = [
     # path("list_category/", views.ListCategoryView.as_view(), name="list_category"),
+    path('exam_question/<int:exam_pk>/questions/', views.QuestionView.as_view(), name='exam_question'),
 ] + router.urls + lesson_course_router.urls + section_router.urls

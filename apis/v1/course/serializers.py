@@ -3,7 +3,7 @@ from rest_framework import serializers
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
 
 from course_app.models import Category, LessonCourse, Section, SectionVideo
-from exam_app.models import SectionExam
+from exam_app.models import SectionExam, Question
 
 
 class ListCategorySerializer(serializers.ModelSerializer):
@@ -111,4 +111,16 @@ class SectionExamSerializer(AdrfModelSerializer):
             'total_score',
             "passing_score",
             "time_limit"
+        )
+
+
+class ExamQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = (
+            "id",
+            "question_text",
+            "question_type",
+            "score",
+            "display_order",
         )

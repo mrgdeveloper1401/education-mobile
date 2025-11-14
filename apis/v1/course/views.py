@@ -4,8 +4,10 @@ from rest_framework import mixins, viewsets, permissions, generics
 from rest_framework.exceptions import NotFound
 from adrf.mixins import ListModelMixin, RetrieveModelMixin
 from adrf.viewsets import GenericViewSet as AdrfGenericViewSet
+from adrf.views import APIView as AdrfAPIView
+from adrf.generics import ListAPIView as AdrfListAPIView
 
-from exam_app.models import SectionExam
+from exam_app.models import SectionExam, Question
 from . import serializers
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo
 from ...utils.custom_pagination import TwentyPageNumberPagination
@@ -190,4 +192,20 @@ class SectionExamViewSet(
             "total_score",
             "passing_score",
             "time_limit"
+        )
+
+
+class QuestionView(AdrfListAPIView):
+    serializer_class = serializers.ExamQuestionSerializer
+    permission_classes = (AsyncIsAuthenticated,)
+
+    def get_queryset(self):
+        return Question.objects.filter(
+            is_active=True,
+            exam_id=self.kwargs["exam_pk"],
+        ).only(
+            "question_text",
+            "question_type",
+            "score",
+            "display_order"
         )
