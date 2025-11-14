@@ -3,7 +3,7 @@ from rest_framework import serializers
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
 
 from course_app.models import Category, LessonCourse, Section, SectionVideo
-from exam_app.models import SectionExam, Question
+from exam_app.models import SectionExam, Question, Choice
 
 
 class ListCategorySerializer(serializers.ModelSerializer):
@@ -114,7 +114,18 @@ class SectionExamSerializer(AdrfModelSerializer):
         )
 
 
+class ChoiceSerializer(AdrfModelSerializer):
+    class Meta:
+        model = Choice
+        fields = (
+            "id",
+            "choice_text"
+        )
+
+
 class ExamQuestionSerializer(serializers.ModelSerializer):
+    choices = ChoiceSerializer(many=True, read_only=True)
+
     class Meta:
         model = Question
         fields = (
@@ -123,4 +134,5 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
             "question_type",
             "score",
             "display_order",
+            "choices"
         )

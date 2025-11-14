@@ -4,10 +4,9 @@ from rest_framework import mixins, viewsets, permissions, generics
 from rest_framework.exceptions import NotFound
 from adrf.mixins import ListModelMixin, RetrieveModelMixin
 from adrf.viewsets import GenericViewSet as AdrfGenericViewSet
-from adrf.views import APIView as AdrfAPIView
 from adrf.generics import ListAPIView as AdrfListAPIView
 
-from exam_app.models import SectionExam, Question
+from exam_app.models import SectionExam, Question, Choice
 from . import serializers
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo
 from ...utils.custom_pagination import TwentyPageNumberPagination
@@ -195,6 +194,7 @@ class SectionExamViewSet(
         )
 
 
+
 class QuestionView(AdrfListAPIView):
     serializer_class = serializers.ExamQuestionSerializer
     permission_classes = (AsyncIsAuthenticated,)
@@ -208,4 +208,9 @@ class QuestionView(AdrfListAPIView):
             "question_type",
             "score",
             "display_order"
+        ).prefetch_related(
+            Prefetch(
+                "choices",
+                queryset=Choice.objects.filter(is_active=True).only("question_id", "choice_text"),
+            )
         )
