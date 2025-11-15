@@ -1,4 +1,4 @@
-FROM docker.arvancloud.ir/python:3.12.10-alpine
+FROM docker.arvancloud.ir/python:3.12-alpine
 
 COPY requirements.txt .
 
