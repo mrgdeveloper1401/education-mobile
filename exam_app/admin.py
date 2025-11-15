@@ -69,6 +69,8 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(StudentExamAttempt)
 class StudentExamAttemptAdmin(admin.ModelAdmin):
+    search_fields = ("student__user__mobile_phone",)
+    search_help_text = _("برای جست و جو میتوانید از شماره موبایل کاربر استفاده کنید")
     list_display = (
         "exam_id",
         "id",
@@ -125,10 +127,10 @@ class ChoiceAdmin(admin.ModelAdmin):
 
 @admin.register(StudentAnswer)
 class StudentAnswerAdmin(admin.ModelAdmin):
-    list_display = ("id", 'attempt_id', 'question_id', 'score', 'is_correct', 'graded_at')
+    list_display = ("id", 'attempt_id', 'question_id', "student_id", 'score', 'is_correct', 'graded_at')
     list_filter = ('is_correct', "is_active")
     ordering = ("-id",)
-    raw_id_fields = ("attempt", "question")
+    raw_id_fields = ("attempt", "question", "student")
     filter_horizontal = ("selected_choices",)
     list_display_links = ("id", "attempt_id", "question_id", "score")
 
@@ -143,6 +145,7 @@ class StudentAnswerAdmin(admin.ModelAdmin):
             "created_at",
             "updated_at",
             "teacher_feedback",
+            "student_id"
         )
 
 

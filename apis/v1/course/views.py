@@ -1,17 +1,19 @@
 from django.db.models import Prefetch, Exists, OuterRef
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins, viewsets, permissions, generics
-from rest_framework.exceptions import NotFound
-from adrf.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
-from adrf.viewsets import GenericViewSet as AdrfGenericViewSet
-from adrf.generics import ListAPIView as AdrfListAPIView
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
 
-from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt
+from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 from . import serializers
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo
-from .serializers import StudentExamAttemptSerializer
+from .serializers import (
+    CreateStudentExamAttemptSerializer,
+    ListDetailStudentExamAttemptSerializer,
+    StudentAnswerSerializer
+)
 from ...utils.custom_pagination import TwentyPageNumberPagination
-from ...utils.custom_permissions import AsyncIsAuthenticated
 
 
 class ListCategoryView(generics.ListAPIView):
@@ -112,6 +114,17 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
                         "section_id", "video__video_file", "title"
                     ),
                 ),
+                Prefetch(
+                    "section_exams", SectionExam.objects.filter(is_active=True).only(
+                        "title",
+                        "description",
+                        'exam_type',
+                        "total_score",
+                        "passing_score",
+                        "time_limit",
+                        "section_id"
+                    ),
+                )
             ).only(
                 "title",
                 "cover_image__image",
@@ -129,103 +142,83 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
         return super().get_serializer_class()
 
 
-class SectionExamViewSet(
-    ListModelMixin,
-    RetrieveModelMixin,
-    AdrfGenericViewSet
-):
-    serializer_class = serializers.SectionExamSerializer
-    permission_classes = (AsyncIsAuthenticated,)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='sections_pk',
-                type=int,
-                location=OpenApiParameter.PATH,
-                description='ID of the section_pk'
-            ),
-            OpenApiParameter(
-                name='lesson_course_pk',
-                type=int,
-                location=OpenApiParameter.PATH,
-                description='ID of the lesson course'
-            ),
-        ]
-    )
-    def list(self, *args, **kwargs):
-        return super().list(*args, **kwargs)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='sections_pk',
-                type=int,
-                location=OpenApiParameter.PATH,
-                description='ID of the section_pk'
-            ),
-            OpenApiParameter(
-                name="id",
-                type=int,
-                location=OpenApiParameter.PATH,
-                description='ID of the section'
-            ),
-            OpenApiParameter(
-                name='lesson_course_pk',
-                type=int,
-                location=OpenApiParameter.PATH,
-                description='ID of the lesson course'
-            ),
-        ]
-    )
-    def retrieve(self, *args, **kwargs):
-        return super().retrieve(*args, **kwargs)
-
-    def get_queryset(self):
-        return SectionExam.objects.filter(
-            section_id=self.kwargs["sections_pk"],
-            is_active=True,
-        ).only(
-            "title",
-            "description",
-            "exam_type",
-            "total_score",
-            "passing_score",
-            "time_limit"
-        )
-
-
-
-class QuestionView(AdrfListAPIView):
+class QuestionView(ListAPIView):
+    """
+    نمایش سوالات ازمون
+    """
     serializer_class = serializers.ExamQuestionSerializer
-    permission_classes = (AsyncIsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return Question.objects.filter(
-            is_active=True,
+        user_id = self.request.user.id
+        # check student attempts
+        if not StudentExamAttempt.objects.filter(
+            student__user_id=user_id,
             exam_id=self.kwargs["exam_pk"],
-        ).only(
-            "question_text",
-            "question_type",
-            "score",
-            "display_order"
-        ).prefetch_related(
-            Prefetch(
-                "choices",
-                queryset=Choice.objects.filter(is_active=True).only("question_id", "choice_text"),
+        ).exists():
+            raise PermissionDenied(detail="شما در ازمون شرکت نکرده اید")
+        else:
+            return Question.objects.filter(
+                is_active=True,
+                exam_id=self.kwargs["exam_pk"],
+            ).only(
+                "question_text",
+                "question_type",
+                "score",
+                "display_order"
+            ).prefetch_related(
+                Prefetch(
+                    "choices",
+                    queryset=Choice.objects.filter(is_active=True).only("question_id", "choice_text"),
+                )
             )
-        )
 
 
-class ListCreateStudentExamAttemptView(
-    ListModelMixin,
-    CreateModelMixin,
-    AdrfGenericViewSet
+class StudentExamAttemptView(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
 ):
-    serializer_class = StudentExamAttemptSerializer
-    permission_classes = (AsyncIsAuthenticated,)
+    """
+    شروع ازمون
+    """
+    serializer_class = ListDetailStudentExamAttemptSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
+        fields = self.serializer_class.Meta.fields
         return StudentExamAttempt.objects.filter(
             student__user_id=self.request.user.id,
+        ).only(*fields)
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateStudentExamAttemptSerializer
+        else:
+            return super().get_serializer_class()
+
+
+class StudentAnswerViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = StudentAnswerSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return StudentAnswer.objects.filter(
+            student__user_id=user_id,
+            question_id=self.kwargs["pk"],
+            is_active=True,
         )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['exam_pk'] = self.kwargs["exam_pk"]
+        context['question_pk'] = self.kwargs["pk"]
+        return context

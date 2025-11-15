@@ -5,6 +5,7 @@ from rest_framework.exceptions import NotFound
 
 from auth_app.models import User
 from core_app.models import Photo
+from auth_app.validators import MobileRegexValidator
 
 
 class RequestOtpSerializer(AdrfSerializer):
@@ -54,3 +55,8 @@ class UploadImageSerializer(AdrfModelSerializer):
             "id",
             "image"
         )
+
+
+class LogInByPhoneSerializer(AdrfSerializer):
+    mobile_phone = serializers.CharField(validators=(MobileRegexValidator(),),)
+    password = serializers.CharField()

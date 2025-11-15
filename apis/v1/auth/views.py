@@ -2,6 +2,7 @@ import datetime
 import time
 import random
 
+from django.contrib.auth import aauthenticate
 from pytz import timezone as pytz_timezone
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
@@ -14,10 +15,18 @@ from base.clasess.send_sms import SendSms
 from base.utils.custom_throttle import OtpRateThrottle
 from base.utils.grand_section_access import grant_mobile_sections_access
 from core_app.models import Photo
-from .serializers import RequestOtpSerializer, OtpVerifySerializer, ProfileSerializer, UploadImageSerializer
+from .serializers import (
+    RequestOtpSerializer,
+    OtpVerifySerializer,
+    ProfileSerializer,
+    UploadImageSerializer,
+    LogInByPhoneSerializer
+)
 from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, AsyncIsAuthenticated
 from apis.utils.custom_response import response
 from base.settings import SIMPLE_JWT
+from ...utils.custom_exceptions import UserNotFoundException, UserBlockException
+
 
 class RequestOtpView(AsyncAPIView):
     serializer_class = RequestOtpSerializer
@@ -164,3 +173,44 @@ class UploadImageView(AsyncAPIView):
             error=False,
             message="پردازش با موفقیت انجام شد"
         )
+
+
+class LoginByPhonePasswordView(AsyncAPIView):
+    serializer_class = LogInByPhoneSerializer
+    permission_classes = (AsyncRemoveAuthenticationPermissions,)
+
+    async def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # phone
+        phone = serializer.validated_data['mobile_phone']
+        password = serializer.validated_data['password']
+
+        user = await aauthenticate(request, mobile_phone=phone, password=password)
+        if user is None:
+            raise UserNotFoundException()
+        else:
+            if user.is_active is False:
+                raise UserBlockException()
+            else:
+                token = RefreshToken.for_user(user)
+                iran_timezone = pytz_timezone("Asia/Tehran")
+                expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
+                expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
+                data = {
+                    "mobile": phone,
+                    "access_token": str(token.access_token),
+                    "refresh_token": str(token),
+                    "jwt": "Bearer",
+                    "expire_timestamp_access_token": expire_timestamp,
+                    "expire_date_access_token": expire_date
+                }
+                await grant_mobile_sections_access(user.id) # access two section into user
+                return response(
+                    status=True,
+                    message="پردازش با موفقیت انجام شد",
+                    error=False,
+                    status_code=200,
+                    data=data
+                )

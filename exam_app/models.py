@@ -165,6 +165,12 @@ class StudentExamAttempt(CreateMixin, UpdateMixin, ActiveMixin):
 
 
 class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
+    student = models.ForeignKey(
+        "auth_app.Student",
+        on_delete=models.PROTECT,
+        related_name="student_answers",
+        null=True # TODO, when clean migration remove these field
+    )
     attempt = models.ForeignKey(
         StudentExamAttempt,
         related_name="answers",

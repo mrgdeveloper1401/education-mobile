@@ -6,7 +6,7 @@ from rest_framework.exceptions import NotFound
 
 from auth_app.models import Student
 from course_app.models import Category, LessonCourse, Section, SectionVideo
-from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt
+from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 
 
 class ListCategorySerializer(serializers.ModelSerializer):
@@ -41,6 +41,20 @@ class ListClassSerializer(serializers.ModelSerializer):
         return obj.course.course_image.course_image if obj.course.course_image else None
 
 
+class SectionExamSerializer(AdrfModelSerializer):
+    class Meta:
+        model = SectionExam
+        fields = (
+            "id",
+            "title",
+            "description",
+            "exam_type",
+            'total_score',
+            "passing_score",
+            "time_limit"
+        )
+
+
 class SectionLessonCourseSerializer(serializers.ModelSerializer):
     has_access = serializers.SerializerMethodField()
     section_image = serializers.SerializerMethodField()
@@ -53,7 +67,7 @@ class SectionLessonCourseSerializer(serializers.ModelSerializer):
             "section_image",
             "is_last_section",
             "description",
-            "has_access"
+            "has_access",
         )
 
     @extend_schema_field(serializers.BooleanField())
@@ -81,6 +95,7 @@ class DetailSectionLessonCourseSerializer(serializers.ModelSerializer):
     section_videos = SectionVideoSerializer(many=True, read_only=True)
     has_access = serializers.SerializerMethodField()
     cover_image_url = serializers.SerializerMethodField()
+    section_exams = SectionExamSerializer(many=True, read_only=True)
 
     class Meta:
         model = Section
@@ -91,6 +106,7 @@ class DetailSectionLessonCourseSerializer(serializers.ModelSerializer):
             "cover_image_url",
             "is_last_section",
             "section_videos",
+            "section_exams",
             "has_access",
         )
 
@@ -101,20 +117,6 @@ class DetailSectionLessonCourseSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.URLField())
     def get_cover_image_url(self ,obj):
         return obj.cover_image.course_image if obj.cover_image else None
-
-
-class SectionExamSerializer(AdrfModelSerializer):
-    class Meta:
-        model = SectionExam
-        fields = (
-            "id",
-            "title",
-            "description",
-            "exam_type",
-            'total_score',
-            "passing_score",
-            "time_limit"
-        )
 
 
 class ChoiceSerializer(AdrfModelSerializer):
@@ -141,34 +143,69 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
         )
 
 
-class StudentExamAttemptSerializer(AdrfModelSerializer):
+class CreateStudentExamAttemptSerializer(serializers.Serializer):
+    exam = serializers.PrimaryKeyRelatedField(
+        queryset=SectionExam.objects.filter(is_active=True).only("id"),
+    )
+
+    def create(self, validated_data):
+        user_id = self.context["request"].user.id
+        get_student = Student.objects.filter(is_active=True, user_id=user_id).only("id")
+        return StudentExamAttempt.objects.create(
+            student_id=get_student.first().id,
+            exam_id=validated_data["exam"].id,
+        )
+
+
+class ListDetailStudentExamAttemptSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentExamAttempt
-        exclude = ("is_active",)
+        fields = (
+            "id",
+            "exam",
+            "started_at",
+            "submitted_at",
+            "total_score",
+            "obtained_score",
+            "is_passed",
+            "status"
+        )
+
+
+class StudentAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentAnswer
+        fields = (
+            "id",
+            "student",
+            "attempt",
+            "question",
+            "selected_choices",
+        )
         extra_kwargs = {
-            "started_at": {"read_only": True},
-            "submitted_at": {"read_only": True},
-            "total_score": {"read_only": True},
-            "obtained_score": {"read_only": True},
-            "status": {"read_only": True},
-            "is_active": {"read_only": True},
-            "student": {"read_only": True},
-            "is_passed": {"read_only": True},
-            "exam": {"read_only": True},
+            "question": {"read_only": True},
+            "attempt": {'read_only': True},
+            "student": {'read_only': True},
         }
 
+    def create(self, validated_data):
+        exam_id = self.context['exam_pk']
+        question_id = self.context['question_pk']
+        user_id = self.context['request'].user.id
 
-    async def acreate(self, validated_data):
-        user = await self.context['request'].user
-        exam_pk = self.context["exam_pk"]
-        user_id = user.id
+        get_student = Student.objects.filter(user_id=user_id, is_active=True).only("id").first()
+        get_student_exam_attempt = StudentExamAttempt.objects.filter(
+            student_id=get_student.id,
+            is_active=True,
+            exam_id=exam_id
+        ).only("id").last()
 
-        get_student = await sync_to_async(Student.objects.filter)(user_id=user_id, is_active=True)
-        if not await get_student.aexists():
-            return NotFound()
-        else:
-            create_exam_attempt = StudentExamAttempt.objects.acreate(
-                student_id=get_student.id,
-                exam_id=exam_pk
-            )
-            return create_exam_attempt
+        selected_choices = validated_data.pop("selected_choices", [])
+        student_answer =  StudentAnswer.objects.create(
+            question_id=question_id,
+            student_id=get_student.id,
+            attempt_id=get_student_exam_attempt.id,
+            **validated_data
+        )
+        student_answer.selected_choices.set(selected_choices)
+        return student_answer

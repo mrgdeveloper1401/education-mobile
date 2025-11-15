@@ -6,15 +6,19 @@ from . import views
 app_name = "v1_course"
 router = SimpleRouter()
 router.register("lesson_course", views.ListLessonClassView, basename="lesson_course")
-router.register("student_exam_attempts", views.ListCreateStudentExamAttemptView, basename='student_exam_attempts')
+router.register("student_exam_attempts", views.StudentExamAttemptView, basename='student_exam_attempts')
 
 lesson_course_router = NestedSimpleRouter(router, r"lesson_course", lookup="lesson_course")
 lesson_course_router.register("sections", views.SectionLessonCourseViewSet, basename="sections")
 
-section_router = NestedSimpleRouter(lesson_course_router, r"sections", lookup="sections")
-section_router.register("exam", views.SectionExamViewSet, basename="exam")
-
 urlpatterns = [
     # path("list_category/", views.ListCategoryView.as_view(), name="list_category"),
-    path('exam_question/<int:exam_pk>/questions/', views.QuestionView.as_view(), name='exam_question'),
-] + router.urls + lesson_course_router.urls + section_router.urls
+    path('exam/<int:exam_pk>/questions/', views.QuestionView.as_view(), name='exam_question'),
+    path(
+        'exam/<int:exam_pk>/questions/<int:pk>/student_answer/',
+        views.StudentAnswerViewSet.as_view(
+            {"get": "list", 'post': "create"}
+        ),
+        name='student-answer-list'
+    ),
+] + router.urls + lesson_course_router.urls
