@@ -237,7 +237,7 @@ if USE_DJANGO_STORAGES:
     AWS_DEFAULT_ACL = 'public-read'
     AWS_QUERYSTRING_AUTH = False
 else:
-    STATIC_ROOT = BASE_DIR / "mobile_static"
+    STATIC_ROOT = BASE_DIR / "static"
     MEDIA_ROOT = BASE_DIR / "media"
 
 if config("USE_LOG", cast=bool, default=True):
