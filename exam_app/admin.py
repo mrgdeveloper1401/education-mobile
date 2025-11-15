@@ -1,6 +1,7 @@
 from django.contrib import admin
-from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
+from django_json_widget.widgets import JSONEditorWidget
+from django.db.models import JSONField
 from .models import SectionExam, Question, StudentExamAttempt, StudentAnswer, ExamGrading, Choice
 
 
@@ -26,6 +27,9 @@ class SectionExamAdmin(admin.ModelAdmin):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        JSONField: {'widget': JSONEditorWidget},
+    }
     list_display = (
         "get_exam_title",
         "exam_id",
@@ -58,6 +62,8 @@ class QuestionAdmin(admin.ModelAdmin):
             "display_order",
             "is_active",
             "created_at",
+            "explanation",
+            "question_text"
         )
 
 

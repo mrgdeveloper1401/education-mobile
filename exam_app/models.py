@@ -1,9 +1,9 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from core_app.models import CreateMixin, UpdateMixin
+from core_app.models import CreateMixin, UpdateMixin, ActiveMixin
 
 
-class SectionExam(CreateMixin, UpdateMixin):
+class SectionExam(CreateMixin, UpdateMixin, ActiveMixin):
     section = models.ForeignKey(
         "course_app.Section",
         related_name="section_exams",
@@ -42,10 +42,6 @@ class SectionExam(CreateMixin, UpdateMixin):
         blank=True,
         verbose_name=_("مدت زمان")
     )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name=_("فعال")
-    )
 
     class Meta:
         db_table = 'section_exam'
@@ -54,15 +50,16 @@ class SectionExam(CreateMixin, UpdateMixin):
         verbose_name_plural = _("آزمون‌های سکشن")
 
 
-class Question(CreateMixin, UpdateMixin):
+class Question(CreateMixin, UpdateMixin, ActiveMixin):
     exam = models.ForeignKey(
         SectionExam,
         related_name="questions",
         on_delete=models.PROTECT,
         verbose_name=_("آزمون")
     )
-    question_text = models.TextField(
-        verbose_name=_("متن سوال")
+    question_text = models.JSONField(
+        verbose_name=_("متن سوال"),
+        default=dict
     )
     question_type = models.CharField(
         max_length=20,
@@ -80,10 +77,6 @@ class Question(CreateMixin, UpdateMixin):
         default=1,
         verbose_name=_("ترتیب نمایش")
     )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name=_("فعال")
-    )
     explanation = models.TextField(
         verbose_name=_("توضیح پاسخ"),
         blank=True
@@ -96,7 +89,7 @@ class Question(CreateMixin, UpdateMixin):
         verbose_name_plural = _("سوالات آزمون")
 
 
-class Choice(CreateMixin, UpdateMixin):
+class Choice(CreateMixin, UpdateMixin, ActiveMixin):
     question = models.ForeignKey(
         Question,
         related_name="choices",
@@ -112,7 +105,6 @@ class Choice(CreateMixin, UpdateMixin):
         default=False,
         verbose_name=_("پاسخ صحیح")
     )
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'exam_choice'
@@ -121,7 +113,7 @@ class Choice(CreateMixin, UpdateMixin):
         verbose_name_plural = _("گزینه‌های سوال")
 
 
-class StudentExamAttempt(CreateMixin, UpdateMixin):
+class StudentExamAttempt(CreateMixin, UpdateMixin, ActiveMixin):
     student = models.ForeignKey(
         "auth_app.Student",
         related_name="exam_attempts",
@@ -164,7 +156,6 @@ class StudentExamAttempt(CreateMixin, UpdateMixin):
         default='in_progress',
         verbose_name=_("وضعیت")
     )
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'student_exam_attempt'
@@ -173,7 +164,7 @@ class StudentExamAttempt(CreateMixin, UpdateMixin):
         verbose_name_plural = _("شرکت‌های در آزمون")
 
 
-class StudentAnswer(CreateMixin, UpdateMixin):
+class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
     attempt = models.ForeignKey(
         StudentExamAttempt,
         related_name="answers",
@@ -186,7 +177,6 @@ class StudentAnswer(CreateMixin, UpdateMixin):
         on_delete=models.PROTECT,
         verbose_name=_("سوال")
     )
-    is_active = models.BooleanField(default=True)
 
     # برای سوالات چندگزینه‌ای
     selected_choices = models.ManyToManyField(
@@ -229,7 +219,7 @@ class StudentAnswer(CreateMixin, UpdateMixin):
         verbose_name_plural = _("پاسخ‌های دانش‌آموزان")
 
 
-class ExamGrading(CreateMixin, UpdateMixin):
+class ExamGrading(CreateMixin, UpdateMixin, ActiveMixin):
     exam = models.ForeignKey(
         SectionExam,
         related_name="gradings",
@@ -259,7 +249,6 @@ class ExamGrading(CreateMixin, UpdateMixin):
         blank=True,
         verbose_name=_("نظر کلی")
     )
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'exam_grading'

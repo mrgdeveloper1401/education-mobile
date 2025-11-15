@@ -7,6 +7,13 @@ from django.utils.translation import gettext_lazy as _
 from core_app.managers import PublishManager
 
 
+class ActiveMixin(models.Model):
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True
+
+
 class CreateMixin(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -36,7 +43,7 @@ class SoftDeleteMixin(models.Model):
         abstract = True
 
 
-class Photo(CreateMixin, UpdateMixin):
+class Photo(CreateMixin, UpdateMixin, ActiveMixin):
     # فیلدهای اصلی
     image = models.ImageField(
         upload_to='photos/%Y/%m/%d/',
@@ -66,10 +73,6 @@ class Photo(CreateMixin, UpdateMixin):
         blank=True,
         null=True
     )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name='فعال'
-    )
     upload_by = models.ForeignKey(
         "auth_app.User",
         related_name='user_photos',
@@ -95,7 +98,7 @@ class Photo(CreateMixin, UpdateMixin):
         super().save(*args, **kwargs)
 
 
-class Video(CreateMixin, UpdateMixin):
+class Video(CreateMixin, UpdateMixin, ActiveMixin):
     # فایل ویدیو
     video_file = models.FileField(
         upload_to="videos/%Y/%m/%d/",
@@ -138,12 +141,6 @@ class Video(CreateMixin, UpdateMixin):
         verbose_name=_("ارتفاع"),
         blank=True,
         null=True
-    )
-
-    # وضعیت ویدیو
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name=_("فعال")
     )
 
     class Meta:

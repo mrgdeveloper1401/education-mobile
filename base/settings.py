@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     'drf_spectacular_sidecar',
     "treebeard",
+    "django_json_widget",
 
     # app
     "auth_app",
@@ -293,7 +294,6 @@ REST_FRAMEWORK = {
 
 # jwt config
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=config("ACCESS_TOKEN_LIFETIME", cast=int, default=1200)),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=config("REFRESH_TOKEN_LIFETIME", cast=int, default=30)),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -323,6 +323,10 @@ SIMPLE_JWT = {
     "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
 }
+if DEBUG:
+    SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(days=config("ACCESS_TOKEN_LIFETIME", cast=int, default=30))
+else:
+    SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(minutes=config("ACCESS_TOKEN_LIFETIME", cast=int, default=120))
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',

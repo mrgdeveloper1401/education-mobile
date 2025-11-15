@@ -5,18 +5,17 @@ from django.utils.translation import gettext_lazy as _
 
 from auth_app.managers import CustomUserManager
 from auth_app.validators import NationCodeRegexValidator
-from core_app.models import UpdateMixin, CreateMixin
+from core_app.models import UpdateMixin, CreateMixin, ActiveMixin
 
 
 # Create your models here.
-class User(AbstractBaseUser, UpdateMixin, CreateMixin, PermissionsMixin):
+class User(AbstractBaseUser, UpdateMixin, CreateMixin, PermissionsMixin, ActiveMixin):
     mobile_phone = models.CharField(_("mobile phone"), max_length=15, unique=True)
     first_name = models.CharField(_("first name"), max_length=30, blank=True, null=True)
     last_name = models.CharField(_("last name"), max_length=30, blank=True, null=True)
     email = models.EmailField(_("email address"), unique=True, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
     password = models.CharField(_("password"), max_length=128, blank=True, null=True)
     image = models.ForeignKey(
         "core_app.Photo",
@@ -94,14 +93,14 @@ class User(AbstractBaseUser, UpdateMixin, CreateMixin, PermissionsMixin):
         db_table = "users"
 
 
-class State(models.Model):
+class State(ActiveMixin):
     state_name = models.CharField(_("استان"), max_length=30, unique=True)
 
     class Meta:
         db_table = "state"
 
 
-class City(models.Model):
+class City(ActiveMixin):
     state = models.ForeignKey(State, on_delete=models.PROTECT, related_name="cities", verbose_name=_("استان"))
     city = models.CharField(_("شهر"), max_length=40, db_index=True)
 
@@ -110,14 +109,13 @@ class City(models.Model):
         db_table = "city"
 
 
-class Coach(CreateMixin, UpdateMixin):
+class Coach(CreateMixin, UpdateMixin, ActiveMixin):
     user = models.OneToOneField(
         User,
         on_delete=models.PROTECT,
         related_name='coach_profile',
     )
     coach_number = models.CharField(max_length=15, blank=True)
-    is_active = models.BooleanField(default=True)
 
     @property
     def get_coach_name(self):
@@ -131,7 +129,7 @@ class Coach(CreateMixin, UpdateMixin):
         db_table = 'coach'
 
 
-class Student(CreateMixin, UpdateMixin):
+class Student(CreateMixin, UpdateMixin, ActiveMixin):
     user = models.OneToOneField(
         User,
         on_delete=models.PROTECT,
@@ -140,7 +138,6 @@ class Student(CreateMixin, UpdateMixin):
     )
     student_number = models.CharField(max_length=11)
     referral_code = models.CharField(max_length=30, blank=True)
-    is_active = models.BooleanField(default=True)
 
     @property
     def student_name(self):

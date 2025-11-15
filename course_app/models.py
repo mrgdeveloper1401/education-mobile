@@ -3,11 +3,11 @@ from django.db import models
 from treebeard.mp_tree import MP_Node
 from django.utils.translation import gettext_lazy as _
 
-from core_app.models import CreateMixin, UpdateMixin
+from core_app.models import CreateMixin, UpdateMixin, ActiveMixin
 from course_app.enums import ProgresChoices, StudentStatusEnum
 
 
-class Category(MP_Node, CreateMixin, UpdateMixin):
+class Category(MP_Node, CreateMixin, UpdateMixin, ActiveMixin):
     category_name = models.CharField(max_length=100, db_index=True)
     node_order_by = ("category_name",)
     image = models.ForeignKey(
@@ -25,13 +25,12 @@ class Category(MP_Node, CreateMixin, UpdateMixin):
         null=True
     )
     description_slug = models.SlugField(blank=True, null=True, allow_unicode=True)
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'category'
 
 
-class Course(CreateMixin, UpdateMixin):
+class Course(CreateMixin, UpdateMixin, ActiveMixin):
     category = models.ForeignKey(Category, related_name="course_category", on_delete=models.PROTECT)
     course_name = models.CharField(max_length=100)
     course_description = models.TextField()
@@ -41,7 +40,6 @@ class Course(CreateMixin, UpdateMixin):
         help_text=_("حداکثر اندازه عکس 1 مگابایت هست"),
         on_delete=models.PROTECT,
     )
-    is_active = models.BooleanField(default=True)
     project_counter = models.PositiveSmallIntegerField(null=True)
     is_free = models.BooleanField(default=False)
     facilities = ArrayField(models.CharField(max_length=30), blank=True, null=True)
@@ -54,7 +52,7 @@ class Course(CreateMixin, UpdateMixin):
         ordering = ("-id",)
 
 
-class LessonCourse(CreateMixin, UpdateMixin):
+class LessonCourse(CreateMixin, UpdateMixin, ActiveMixin):
     course = models.ForeignKey(
         Course,
         on_delete=models.PROTECT,
@@ -74,7 +72,6 @@ class LessonCourse(CreateMixin, UpdateMixin):
         through="StudentEnrollment",
         verbose_name=_("دانش جو")
     )
-    is_active = models.BooleanField(default=True)
     progress = models.CharField(
         help_text=_("وضعیت پیشرفت کلاس"),
         choices=ProgresChoices.choices,
@@ -88,7 +85,7 @@ class LessonCourse(CreateMixin, UpdateMixin):
         db_table = 'lesson_course'
 
 
-class StudentEnrollment(CreateMixin, UpdateMixin):
+class StudentEnrollment(CreateMixin, UpdateMixin, ActiveMixin):
     student = models.ForeignKey(
         "auth_app.Student",
         on_delete=models.PROTECT,
@@ -113,7 +110,7 @@ class StudentEnrollment(CreateMixin, UpdateMixin):
         unique_together = ("student", "lesson_course")
 
 
-class Section(CreateMixin, UpdateMixin):
+class Section(CreateMixin, UpdateMixin, ActiveMixin):
     course = models.ForeignKey(
         Course,
         on_delete=models.PROTECT,
@@ -128,7 +125,6 @@ class Section(CreateMixin, UpdateMixin):
         on_delete=models.PROTECT,
         verbose_name=_("عکس")
     )
-    is_active = models.BooleanField(default=True)
     is_last_section = models.BooleanField(
         default=False,
         help_text=_("اگر تیک این مورد خورده باشد یعنی اخرین سکشن برای درس خواهد بود")
@@ -139,7 +135,7 @@ class Section(CreateMixin, UpdateMixin):
         db_table = 'course_section'
 
 
-class SectionVideo(CreateMixin, UpdateMixin):
+class SectionVideo(CreateMixin, UpdateMixin, ActiveMixin):
     title = models.CharField(max_length=50, help_text=_("عنوان"), null=True)
     section = models.ForeignKey(
         Section,
@@ -154,14 +150,13 @@ class SectionVideo(CreateMixin, UpdateMixin):
         verbose_name=_("ویدیو"),
         limit_choices_to={"is_active": True}
     )
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ("id",)
         db_table = 'course_section_video'
 
 
-class StudentAccessSection(CreateMixin, UpdateMixin):
+class StudentAccessSection(CreateMixin, UpdateMixin, ActiveMixin):
     student = models.ForeignKey(
         "auth_app.Student",
         on_delete=models.PROTECT,
@@ -175,7 +170,6 @@ class StudentAccessSection(CreateMixin, UpdateMixin):
         limit_choices_to={"is_active": True}
     )
     is_access = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ("id",)
