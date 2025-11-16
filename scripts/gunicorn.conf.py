@@ -9,7 +9,7 @@ worker_connections = 1000
 # Logging
 loglevel = "error"
 errorlog = "-"
-accesslog = None
+accesslog = "-"
 
 # Timeouts
 timeout = 30
