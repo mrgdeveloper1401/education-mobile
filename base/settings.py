@@ -76,6 +76,7 @@ USE_CORS = config('USE_CORS', cast=bool, default=True)
 if USE_CORS:
     INSTALLED_APPS.append('corsheaders')
     MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+    CORS_ALLOWED_ORIGINS = config("PRODUCTION_CORS_ALLOWED_ORIGINS", cast=Csv())
 
 ASGI_APPLICATION = "base.asgi.application"
 
@@ -213,12 +214,9 @@ STORAGES = {
         }
 }
 
-# config package cors headers
-if DEBUG is False:
-    CORS_ALLOWED_ORIGINS = config("PRODUCTION_CORS_ALLOWED_ORIGINS", cast=Csv())
-
 # whitenoise
-if config("USE_WHITENOISE", cast=bool, default=False):
+USE_WHITENOISE = config("USE_WHITENOISE", cast=bool, default=False)
+if USE_WHITENOISE:
     MIDDLEWARE += [
         "whitenoise.middleware.WhiteNoiseMiddleware"
     ]
@@ -240,7 +238,8 @@ else:
     STATIC_ROOT = BASE_DIR / "static"
     MEDIA_ROOT = BASE_DIR / "media"
 
-if config("USE_LOG", cast=bool, default=True):
+USE_LOG = config("USE_LOG", cast=bool, default=False)
+if USE_LOG:
     log_dir = os.path.join('general_log_django', timezone.now().strftime("%Y-%m-%d"))
     os.makedirs(log_dir, exist_ok=True)
     LOGGING = {
@@ -327,6 +326,7 @@ if DEBUG:
     SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(days=config("ACCESS_TOKEN_LIFETIME", cast=int, default=30))
 else:
     SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(minutes=config("ACCESS_TOKEN_LIFETIME", cast=int, default=120))
+    SIMPLE_JWT['AUDIENCE'] = ""
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',
