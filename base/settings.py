@@ -130,7 +130,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 STATIC_URL = "/static/"
-MEDIA_URL = "/media/"
+STATIC_ROOT = BASE_DIR / "static"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -235,7 +235,7 @@ if USE_DJANGO_STORAGES:
     AWS_DEFAULT_ACL = 'public-read'
     AWS_QUERYSTRING_AUTH = False
 else:
-    STATIC_ROOT = BASE_DIR / "static"
+    MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
 USE_LOG = config("USE_LOG", cast=bool, default=False)
