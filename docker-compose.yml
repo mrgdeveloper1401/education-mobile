@@ -20,7 +20,7 @@ services:
 
   backend:
     env_file: ".env"
-    container_name: education-mobile
+    container_name: django
     volumes:
       - static_files:/home/app/static
     build:
