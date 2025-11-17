@@ -75,8 +75,6 @@ class OtpVerifyView(AsyncAPIView):
     permission_classes = (AsyncRemoveAuthenticationPermissions,)
 
     async def post(self, request):
-        import ipdb
-        ipdb.set_trace()
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
