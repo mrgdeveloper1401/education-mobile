@@ -9,6 +9,7 @@ from adrf.views import APIView as AsyncAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import mixins, viewsets
+from asgiref.sync import sync_to_async
 
 from auth_app.models import User, Student
 from base.clasess.send_sms import SendSms
@@ -74,6 +75,8 @@ class OtpVerifyView(AsyncAPIView):
     permission_classes = (AsyncRemoveAuthenticationPermissions,)
 
     async def post(self, request):
+        import ipdb
+        ipdb.set_trace()
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -103,7 +106,7 @@ class OtpVerifyView(AsyncAPIView):
                     data=None
                 )
             else:
-                token = RefreshToken.for_user(user)
+                token = await sync_to_async((RefreshToken.for_user))(user)
                 iran_timezone = pytz_timezone("Asia/Tehran")
                 expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
                 expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
