@@ -302,7 +302,7 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": config("SIGNING_KEY", cast=str, default="test_project"),
     "VERIFYING_KEY": "",
-    "AUDIENCE": config("AUDIENCE", cast=str, default=None),
+    "AUDIENCE": None,
     "ISSUER": None,
     "JSON_ENCODER": None,
     "JWK_URL": None,
@@ -327,7 +327,7 @@ if DEBUG:
     SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(days=config("ACCESS_TOKEN_LIFETIME", cast=int, default=30))
 else:
     SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(minutes=config("ACCESS_TOKEN_LIFETIME", cast=int, default=120))
-    SIMPLE_JWT['AUDIENCE'] = ""
+    SIMPLE_JWT['AUDIENCE'] = config("AUDIENCE", cast=set)
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',
