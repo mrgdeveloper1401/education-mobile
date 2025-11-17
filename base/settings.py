@@ -327,7 +327,7 @@ if DEBUG:
     SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(days=config("ACCESS_TOKEN_LIFETIME", cast=int, default=30))
 else:
     SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(minutes=config("ACCESS_TOKEN_LIFETIME", cast=int, default=120))
-    SIMPLE_JWT['AUDIENCE'] = config("AUDIENCE", cast=set)
+    SIMPLE_JWT['AUDIENCE'] = config("AUDIENCE", cast=str)
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',
