@@ -302,7 +302,7 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": config("SIGNING_KEY", cast=str, default="test_project"),
     "VERIFYING_KEY": "",
-    "AUDIENCE": None,
+    "AUDIENCE": config("AUDIENCE", cast=str, default=None),
     "ISSUER": None,
     "JSON_ENCODER": None,
     "JWK_URL": None,
