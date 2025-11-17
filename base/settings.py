@@ -76,7 +76,7 @@ USE_CORS = config('USE_CORS', cast=bool, default=True)
 if USE_CORS:
     INSTALLED_APPS.append('corsheaders')
     MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
-    CORS_ALLOWED_ORIGINS = config("PRODUCTION_CORS_ALLOWED_ORIGINS", cast=Csv())
+    CORS_ALLOWED_ORIGINS = config("PRODUCTION_CORS_ALLOWED_ORIGINS", cast=Csv(), default=None)
 
 ASGI_APPLICATION = "base.asgi.application"
 

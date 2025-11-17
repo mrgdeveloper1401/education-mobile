@@ -7,9 +7,9 @@ from .models import User, Coach, Student
 @receiver(post_save, sender=User)
 async def create_profile(sender, instance, created, **kwargs):
     if created and instance.is_coach:
-        await Coach.objects.acreate(user=instance)
+        coach, _ = await Coach.objects.aget_or_create(user=instance)
     if created and not instance.is_coach:
-        await Student.objects.acreate(user=instance)
+        student, _  = await Student.objects.aget_or_create(user=instance)
 
 
 @receiver(post_save, sender=Student)
