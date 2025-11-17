@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'drf_spectacular_sidecar',
     "treebeard",
     "django_json_widget",
+    "rest_framework_simplejwt.token_blacklist",
 
     # app
     "auth_app",

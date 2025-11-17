@@ -1,5 +1,5 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenVerifyView
+from rest_framework_simplejwt.views import TokenVerifyView, TokenRefreshView, TokenBlacklistView
 from rest_framework.routers import SimpleRouter
 from . import views
 
@@ -9,7 +9,9 @@ router = SimpleRouter()
 router.register("profile", views.UserProfileView, basename="profile")
 
 urlpatterns = [
-    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path("token/refresh/", TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
     path("request_otp_phone/", views.RequestOtpView.as_view(), name='request_otp_phone'),
     path("login_by_phone_password/", views.LoginByPhonePasswordView.as_view(), name='login_by_phone_password'),
     path("otp_verify/", views.OtpVerifyView.as_view(), name='otp_verify'),
