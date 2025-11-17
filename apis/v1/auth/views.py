@@ -195,7 +195,7 @@ class LoginByPhonePasswordView(AsyncAPIView):
             if user.is_active is False:
                 raise UserBlockException()
             else:
-                token = RefreshToken.for_user(user)
+                token = sync_to_async((RefreshToken.for_user))(user)
                 iran_timezone = pytz_timezone("Asia/Tehran")
                 expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
                 expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
