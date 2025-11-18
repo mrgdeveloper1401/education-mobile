@@ -7,16 +7,20 @@ from rest_framework.permissions import IsAuthenticated
 
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 from . import serializers
-from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo
+from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, CategoryComment
 from .serializers import (
     CreateStudentExamAttemptSerializer,
     ListDetailStudentExamAttemptSerializer,
-    StudentAnswerSerializer
+    StudentAnswerSerializer,
+    CategoryCommentSerializer,
+    ListDetailCategoryCommentSerializer,
+    UpdateCategoryCommentSerializer
 )
-from ...utils.custom_pagination import TwentyPageNumberPagination
+from ...utils.custom_pagination import TwentyPageNumberPagination, ScrollPagination
+from ...utils.custom_permissions import IsOwnerOrReadOnly
 
 
-class ListCategoryView(generics.ListAPIView):
+class ListDetailCategoryView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = serializers.ListCategorySerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Category.objects.filter(
@@ -222,3 +226,36 @@ class StudentAnswerViewSet(
         context['exam_pk'] = self.kwargs["exam_pk"]
         context['question_pk'] = self.kwargs["pk"]
         return context
+
+
+class CategoryCommentViewSet(viewsets.ModelViewSet):
+    """
+    pagination --> 20 item \n
+    scroll pagination --> (page_size = 20 max_page_size = 100 page_size_query_param = 'page_size')
+
+    """
+    pagination_class = ScrollPagination
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CategoryCommentSerializer
+        if self.action == "update":
+            return UpdateCategoryCommentSerializer
+        else:
+            return ListDetailCategoryCommentSerializer
+
+    def get_queryset(self):
+        return CategoryComment.objects.filter(
+            is_active=True,
+            category_id=self.kwargs["category_pk"],
+        ).order_by("-id").defer("is_active", "category")
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['category_pk'] = self.kwargs["category_pk"]
+        return context
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()

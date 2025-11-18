@@ -1,11 +1,11 @@
-from asgiref.sync import sync_to_async
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
-from rest_framework.exceptions import NotFound
+
 
 from auth_app.models import Student
-from course_app.models import Category, LessonCourse, Section, SectionVideo
+from course_app.models import Category, LessonCourse, Section, SectionVideo, CategoryComment
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 
 
@@ -209,3 +209,47 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         )
         student_answer.selected_choices.set(selected_choices)
         return student_answer
+
+
+class ListDetailCategoryCommentSerializer(serializers.ModelSerializer):
+    is_owner = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CategoryComment
+        exclude = ("is_active", "category")
+
+    def get_is_owner(self, obj):
+        user_id = self.context['request'].user.id
+        return True if obj.user_id == user_id else False
+
+
+class CategoryCommentSerializer(serializers.ModelSerializer):
+    parent = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = CategoryComment
+        fields = (
+            "id",
+            "comment_body",
+            "is_pined",
+            "parent"
+        )
+
+    def create(self, validated_data):
+        user_id = self.context['request'].user.id
+        category_id = self.context['category_pk']
+        parent = validated_data.pop("parent")
+
+        if parent:
+            get_obj = get_object_or_404(CategoryComment, pk=parent)
+            comment = CategoryComment.add_child(user_id=user_id, category_id=category_id, pk=parent, **validated_data)
+            return  comment
+        else:
+            comment = CategoryComment.add_child(user_id=user_id, category_id=category_id, **validated_data)
+            return comment
+
+
+class UpdateCategoryCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoryComment
+        fields = ("comment_body", "is_pined")

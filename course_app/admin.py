@@ -1,11 +1,13 @@
 from django.contrib import admin
+from django.db.models import JSONField
 from django.utils.translation import gettext_lazy as _
+from django_json_widget.widgets import JSONEditorWidget
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 
 from .models import (
     Category, Course, LessonCourse, StudentEnrollment,
-    Section, SectionVideo, StudentAccessSection
+    Section, SectionVideo, StudentAccessSection, CategoryComment
 )
 
 
@@ -383,20 +385,42 @@ class StudentAccessSectionAdmin(admin.ModelAdmin):
         )
 
 
-# اگر می‌خواهید actions اضافه کنید
+@admin.register(CategoryComment)
+class CategoryCommentAdmin(TreeAdmin):
+    list_editable = ("is_active", "is_pined")
+    form = movenodeform_factory(CategoryComment)
+    raw_id_fields = ("user", "category")
+    list_display = ('user_id', "id", 'category_id', 'is_pined', 'is_active')
+    search_fields = ('user__phone',)
+    list_filter = ('is_pined', 'is_active')
+    list_display_links = ("user_id", 'id', "category_id")
+    search_help_text = _("برای جست وجو میتوانید از شماره موبایل کاربر استفاده کنید")
+    formfield_overrides = {
+        JSONField: {'widget': JSONEditorWidget},
+    }
+    list_per_page = 30
+    def get_queryset(self, request):
+        return super().get_queryset(request).only(
+            "user_id",
+            "category_id",
+            "is_pined",
+            "is_active",
+            "comment_body",
+            "path",
+            "depth",
+            "numchild"
+        )
+
+
+# اضافه کردن actions به مدل‌ها
 def make_active(modeladmin, request, queryset):
     queryset.update(is_active=True)
 
-
 make_active.short_description = _("فعال کردن موارد انتخاب شده")
-
 
 def make_inactive(modeladmin, request, queryset):
     queryset.update(is_active=False)
 
-
 make_inactive.short_description = _("غیرفعال کردن موارد انتخاب شده")
-
-# اضافه کردن actions به مدل‌ها
-for model_admin in [CourseAdmin, LessonCourseAdmin, SectionAdmin, SectionVideoAdmin]:
+for model_admin in [CourseAdmin, LessonCourseAdmin, SectionAdmin, SectionVideoAdmin, CategoryCommentAdmin]:
     model_admin.actions = (make_active, make_inactive)

@@ -174,3 +174,25 @@ class StudentAccessSection(CreateMixin, UpdateMixin, ActiveMixin):
     class Meta:
         ordering = ("id",)
         db_table = "student_access_section"
+
+
+class CategoryComment(MP_Node, CreateMixin, UpdateMixin, ActiveMixin):
+    user = models.ForeignKey(
+        'auth_app.User',
+        on_delete=models.PROTECT,
+        related_name='user_comments',
+        limit_choices_to={"is_active": True},
+        verbose_name=_("کاربر")
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.PROTECT,
+        related_name='category_comments',
+        verbose_name=_("دسته بندی")
+    )
+    comment_body = models.JSONField(_("متن کامنت"), default=dict)
+    is_pined = models.BooleanField(default=False, verbose_name=_("پین شده"))
+
+    class Meta:
+        db_table = 'category_comment'
+        ordering = ("id",)
