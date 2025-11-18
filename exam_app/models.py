@@ -77,7 +77,7 @@ class Question(CreateMixin, UpdateMixin, ActiveMixin):
         default=1,
         verbose_name=_("ترتیب نمایش")
     )
-    explanation = models.TextField(
+    explanation = models.JSONField(
         verbose_name=_("راهنمایی پاسخ"),
         blank=True
     )
