@@ -213,13 +213,14 @@ class SectionVideoInline(admin.TabularInline):
     model = SectionVideo
     extra = 0
     readonly_fields = ('created_at',)
+    raw_id_fields = ("video",)
 
     fieldsets = (
         (None, {
             'fields': (
                 'title',
                 'video',
-                'video_url',
+                # 'video_url',
                 'is_active'
             )
         }),
