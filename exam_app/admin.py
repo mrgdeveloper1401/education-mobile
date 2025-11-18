@@ -5,6 +5,11 @@ from django.db.models import JSONField
 from .models import SectionExam, Question, StudentExamAttempt, StudentAnswer, ExamGrading, Choice
 
 
+class ChoiceInline(admin.StackedInline):
+    model = Choice
+    extra = 0
+
+
 @admin.register(SectionExam)
 class SectionExamAdmin(admin.ModelAdmin):
     search_fields = ('title',)
@@ -27,6 +32,7 @@ class SectionExamAdmin(admin.ModelAdmin):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
+    inlines = (ChoiceInline, )
     formfield_overrides = {
         JSONField: {'widget': JSONEditorWidget},
     }
