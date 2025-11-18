@@ -36,12 +36,12 @@ class SectionExam(CreateMixin, UpdateMixin, ActiveMixin):
         default=50,
         verbose_name=_("نمره قبولی")
     )
-    time_limit = models.PositiveIntegerField(
-        help_text=_("مدت زمان آزمون به دقیقه"),
-        null=True,
-        blank=True,
-        verbose_name=_("مدت زمان")
-    )
+    # time_limit = models.PositiveIntegerField(
+    #     help_text=_("مدت زمان آزمون به دقیقه"),
+    #     null=True,
+    #     blank=True,
+    #     verbose_name=_("مدت زمان")
+    # )
 
     class Meta:
         db_table = 'section_exam'
@@ -78,10 +78,15 @@ class Question(CreateMixin, UpdateMixin, ActiveMixin):
         verbose_name=_("ترتیب نمایش")
     )
     explanation = models.TextField(
-        verbose_name=_("توضیح پاسخ"),
+        verbose_name=_("راهنمایی پاسخ"),
         blank=True
     )
-
+    answer_the_question = models.JSONField(
+        blank=True,
+        null=True,
+        default=dict,
+        verbose_name=_("پاسخ سوال")
+    )
     class Meta:
         db_table = 'exam_question'
         ordering = ('id',)

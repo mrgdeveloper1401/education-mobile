@@ -15,7 +15,7 @@ class SectionExamAdmin(admin.ModelAdmin):
     search_fields = ('title',)
     raw_id_fields = ('section',)
     search_help_text = _("برای جست و جو میتوانید از نام ازمون استفاده کنید")
-    list_editable = ("is_active", "passing_score", "time_limit")
+    list_editable = ("is_active", "passing_score")
     list_display = (
         "title",
         'id',
@@ -23,7 +23,7 @@ class SectionExamAdmin(admin.ModelAdmin):
         "exam_type",
         "total_score",
         "passing_score",
-        "time_limit",
+        # "time_limit",
         "created_at",
         "is_active",
     )
@@ -69,7 +69,8 @@ class QuestionAdmin(admin.ModelAdmin):
             "is_active",
             "created_at",
             "explanation",
-            "question_text"
+            "question_text",
+            "answer_the_question"
         )
 
 

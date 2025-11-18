@@ -125,7 +125,7 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
                         'exam_type',
                         "total_score",
                         "passing_score",
-                        "time_limit",
+                        # "time_limit",
                         "section_id"
                     ),
                 )

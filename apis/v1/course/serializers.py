@@ -51,7 +51,7 @@ class SectionExamSerializer(AdrfModelSerializer):
             "exam_type",
             'total_score',
             "passing_score",
-            "time_limit"
+            # "time_limit"
         )
 
 
