@@ -1,5 +1,5 @@
 from django.db.models import Prefetch, Exists, OuterRef
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_view
 from rest_framework import mixins, viewsets, permissions, generics
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView
@@ -228,6 +228,35 @@ class StudentAnswerViewSet(
         return context
 
 
+common_params = [
+    OpenApiParameter(
+        name='id',
+        type=int,
+        location=OpenApiParameter.PATH,
+        description='ID of the category_comment'
+    ),
+    OpenApiParameter(
+        name="category_pk",
+        type=int,
+        location=OpenApiParameter.PATH,
+        description='category_pk of the category_comment'
+    )
+]
+list_params = [
+    OpenApiParameter(
+        name='category_pk',
+        type=int,
+        location=OpenApiParameter.PATH,
+        description='category_pk of the category_comment'
+    )
+]
+@extend_schema_view(
+    retrieve=extend_schema(parameters=common_params),
+    update=extend_schema(parameters=common_params),
+    partial_update=extend_schema(parameters=common_params),
+    destroy=extend_schema(parameters=common_params),
+    list=extend_schema(parameters=list_params),
+)
 class CategoryCommentViewSet(viewsets.ModelViewSet):
     """
     pagination --> 20 item \n

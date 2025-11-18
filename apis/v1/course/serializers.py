@@ -218,6 +218,7 @@ class ListDetailCategoryCommentSerializer(serializers.ModelSerializer):
         model = CategoryComment
         exclude = ("is_active", "category")
 
+    @extend_schema_field(serializers.BooleanField())
     def get_is_owner(self, obj):
         user_id = self.context['request'].user.id
         return True if obj.user_id == user_id else False
