@@ -256,6 +256,7 @@ list_params = [
     partial_update=extend_schema(parameters=common_params),
     destroy=extend_schema(parameters=common_params),
     list=extend_schema(parameters=list_params),
+    create=extend_schema(parameters=list_params),
 )
 class CategoryCommentViewSet(viewsets.ModelViewSet):
     """
