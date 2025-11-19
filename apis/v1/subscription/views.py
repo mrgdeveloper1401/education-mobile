@@ -5,7 +5,7 @@ from subscription_app.models import SubscriptionPlan
 from .serializers import SubscriptionSerializer
 
 
-class ListSubscriptionView(generics.ListAPIView):
+class ListSubscriptionView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = SubscriptionSerializer
     # permission_classes = (IsAuthenticated,)
 

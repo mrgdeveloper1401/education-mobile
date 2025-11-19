@@ -169,7 +169,8 @@ class QuestionView(ListAPIView):
                 "question_text",
                 "question_type",
                 "score",
-                "display_order"
+                "display_order",
+                "explanation"
             ).prefetch_related(
                 Prefetch(
                     "choices",

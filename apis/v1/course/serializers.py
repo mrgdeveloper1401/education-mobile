@@ -139,6 +139,7 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
             "question_type",
             "score",
             "display_order",
+            "explanation",
             "choices"
         )
 
