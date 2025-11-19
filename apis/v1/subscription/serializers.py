@@ -14,5 +14,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "duration",
             "original_price",
             "discounted_price",
-            "image"
+            "image",
+            "has_installment"
         )

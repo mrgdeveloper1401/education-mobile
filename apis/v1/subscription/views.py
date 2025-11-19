@@ -22,4 +22,5 @@ class ListSubscriptionView(generics.ListAPIView):
             "image__image",
             "image__height",
             "image__width",
+            "has_installment"
         )
