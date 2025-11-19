@@ -251,9 +251,3 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
         self.message_user(request, f'{updated} اشتراک با موفقیت لغو شد.')
 
     mark_as_canceled.short_description = _('لغو اشتراک‌های انتخاب شده')
-
-
-# تنظیمات مربوط به ادمین
-admin.site.site_header = _('پنل مدیریت سیستم اشتراک')
-admin.site.site_title = _('سیستم اشتراک')
-admin.site.index_title = _('مدیریت اشتراک‌ها')
