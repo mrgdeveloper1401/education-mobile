@@ -1,8 +1,8 @@
 from rest_framework import mixins, viewsets, generics
 from rest_framework.permissions import IsAuthenticated
 
-from subscription_app.models import SubscriptionPlan
-from .serializers import SubscriptionSerializer
+from subscription_app.models import SubscriptionPlan, InstallmentPlan
+from .serializers import SubscriptionSerializer, InstallmentPlanSerializer
 
 
 class ListSubscriptionView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -23,4 +23,15 @@ class ListSubscriptionView(mixins.ListModelMixin, mixins.RetrieveModelMixin, vie
             "image__height",
             "image__width",
             "has_installment"
+        )
+
+
+class InstallmentPlanViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = InstallmentPlanSerializer
+
+    def get_queryset(self):
+        return InstallmentPlan.objects.filter(
+        is_active=True
+        ).defer(
+            *self.serializer_class.Meta.exclude,
         )
