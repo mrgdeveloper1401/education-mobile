@@ -3,12 +3,14 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.urls import reverse_lazy
 from django.utils import timezone
+
+from .forms import SubscriptionPlanAdminForm
 from .models import SubscriptionPlan, UserSubscription, InstallmentOption, InstallmentPlan, UserInstallment
 
 
 class InstallmentOptionInline(admin.TabularInline):
     model = InstallmentOption
-    extra = 1
+    extra = 0
     fields = ('installment_number', 'amount', 'due_days')
     ordering = ('installment_number',)
 
@@ -28,8 +30,26 @@ class InstallmentPlanInline(admin.TabularInline):
     get_total_amount.short_description = _("مبلغ کل با سود")
 
 
+class UserInstallmentInline(admin.TabularInline):
+    model = UserInstallment
+    extra = 0
+    readonly_fields = (
+        'installment_number',
+        'amount',
+        'due_date',
+        'paid_date',
+        'status'
+    )
+    can_delete = False
+
+    def has_add_permission(self, request, obj):
+        return False
+
+
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):
+    form = SubscriptionPlanAdminForm
+    inlines = (InstallmentPlanInline,)
     list_display_links = ("id", 'name')
     raw_id_fields = ("image",)
     list_display = (
@@ -122,6 +142,7 @@ class SubscriptionPlanAdmin(admin.ModelAdmin):
 @admin.register(UserSubscription)
 class UserSubscriptionAdmin(admin.ModelAdmin):
     raw_id_fields = ("user", "plan")
+    inlines = (UserInstallmentInline,)
     list_display_links = ("id", "user__mobile_phone", "start_date", "end_date")
     search_help_text = _("برای حست و جو میتوانید از شماره موبایل کاربر استفاده کنید")
     list_display = (
@@ -285,4 +306,93 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(InstallmentPlan)
 class InstallmentPlanAdmin(admin.ModelAdmin):
-    pass
+    list_display_links = ("name", "subscription_plan_id", "id")
+    search_help_text = _("برای جست و جو میتوانید از نام طرح استفاده کنید")
+    list_display = (
+        'name',
+        "id",
+        'subscription_plan_id',
+        'number_of_installments',
+        'interest_rate',
+        # 'get_installment_amount',
+        # 'get_total_amount',
+        'is_active',
+    )
+    list_filter = (
+        'is_active',
+        'plan_type'
+    )
+    search_fields = ('name', )
+    list_editable = ('is_active',)
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': (
+                'subscription_plan',
+                'name',
+                'plan_type',
+                'number_of_installments',
+                'interest_rate'
+            )
+        }),
+        (_("تنظیمات نمایش"), {
+            'fields': (
+                'is_active',
+            )
+        }),
+        (_("تاریخ‌ها"), {
+            'fields': (
+                'created_at',
+                'updated_at'
+            )
+        }),
+    )
+    inlines = [InstallmentOptionInline]
+    raw_id_fields = ("subscription_plan",)
+
+    def get_installment_amount(self, obj):
+        if obj.subscription_plan:
+            amount = obj.get_installment_amount(obj.subscription_plan.discounted_price)
+            return f"{amount:,.0f} تومان"
+        return "-"
+
+    get_installment_amount.short_description = _("مبلغ هر قسط")
+
+    def get_total_amount(self, obj):
+        if obj.subscription_plan:
+            total = obj.calculate_total_amount(obj.subscription_plan.discounted_price)
+            return f"{total:,.0f} تومان"
+        return "-"
+
+    get_total_amount.short_description = _("مبلغ کل با سود")
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('subscription_plan').only(
+            "subscription_plan__name",
+            "is_active",
+            "name",
+            "plan_type",
+            "number_of_installments",
+            "interest_rate",
+            "created_at",
+            "updated_at",
+        )
+
+
+@admin.register(InstallmentOption)
+class InstallmentOptionAdmin(admin.ModelAdmin):
+    list_display = (
+        'installment_plan_id',
+        "id",
+        'installment_number',
+        'amount',
+        'due_days',
+        'get_due_description',
+        "is_active",
+    )
+    list_filter = ('is_active',)
+
+    def get_due_description(self, obj):
+        return f"{obj.due_days} روز پس از خرید"
+
+    get_due_description.short_description = _("زمان سررسید")

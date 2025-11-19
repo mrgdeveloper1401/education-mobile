@@ -27,13 +27,15 @@ class SubscriptionPlan(CreateMixin, UpdateMixin, ActiveMixin):
     )
     min_installment_months = models.IntegerField(
         _("حداقل مدت برای قسطی (ماه)"),
+        db_default=0,
         default=0,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(0)]
     )
     max_installments = models.IntegerField(
         _("حداکثر تعداد اقساط مجاز"),
+        db_default=0,
         default=0,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(0)]
     )
 
     # ویژگی‌های پلن
@@ -105,7 +107,8 @@ class InstallmentPlan(CreateMixin, UpdateMixin, ActiveMixin):
         SubscriptionPlan,
         on_delete=models.PROTECT,
         related_name='installment_plans',
-        verbose_name=_("پلن اشتراک")
+        verbose_name=_("پلن اشتراک"),
+        limit_choices_to={"has_installment": True}
     )
     name = models.CharField(_("نام طرح قسطی"), max_length=100)
     plan_type = models.CharField(
@@ -114,12 +117,18 @@ class InstallmentPlan(CreateMixin, UpdateMixin, ActiveMixin):
         choices=PLAN_TYPE_CHOICES,
         default='fixed'
     )
-    number_of_installments = models.IntegerField(_("تعداد اقساط"))
+    number_of_installments = models.IntegerField(
+        _("تعداد اقساط"),
+        default=1,
+        db_default=1,
+        validators=[MinValueValidator(0)]
+    )
     interest_rate = models.DecimalField(
         _("نرخ سود (درصد)"),
         max_digits=5,
         decimal_places=2,
-        default=0
+        default=0,
+        validators=[MinValueValidator(0)]
     )
 
     class Meta:
@@ -129,7 +138,7 @@ class InstallmentPlan(CreateMixin, UpdateMixin, ActiveMixin):
         ordering = ('id',)
 
 
-class InstallmentOption(CreateMixin, UpdateMixin):
+class InstallmentOption(CreateMixin, UpdateMixin, ActiveMixin):
     """گزینه‌های قسطی برای هر پلن"""
 
     installment_plan = models.ForeignKey(
