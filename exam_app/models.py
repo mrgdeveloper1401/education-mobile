@@ -65,7 +65,7 @@ class Question(CreateMixin, UpdateMixin, ActiveMixin):
         max_length=20,
         choices=[
             ('multiple_choice', _("چند گزینه‌ای")),
-            ('true_false', _("صحیح/غلط")),
+            ('code', _("کد")),
         ],
         verbose_name=_("نوع سوال")
     )

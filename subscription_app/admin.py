@@ -2,11 +2,30 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.urls import reverse_lazy
-from django.contrib.auth import get_user_model
 from django.utils import timezone
-from .models import SubscriptionPlan, UserSubscription
+from .models import SubscriptionPlan, UserSubscription, InstallmentOption, InstallmentPlan, UserInstallment
 
-User = get_user_model()
+
+class InstallmentOptionInline(admin.TabularInline):
+    model = InstallmentOption
+    extra = 1
+    fields = ('installment_number', 'amount', 'due_days')
+    ordering = ('installment_number',)
+
+
+class InstallmentPlanInline(admin.TabularInline):
+    model = InstallmentPlan
+    extra = 0
+    fields = ('name', 'number_of_installments', 'interest_rate', 'is_active')
+    readonly_fields = ('get_total_amount',)
+
+    def get_total_amount(self, obj):
+        if obj.subscription_plan:
+            total = obj.calculate_total_amount(obj.subscription_plan.discounted_price)
+            return f"{total:,.0f} تومان"
+        return "-"
+
+    get_total_amount.short_description = _("مبلغ کل با سود")
 
 
 @admin.register(SubscriptionPlan)
@@ -16,6 +35,9 @@ class SubscriptionPlanAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'name',
+        "has_installment",
+        "min_installment_months",
+        "max_installments",
         'get_duration_display',
         'original_price_formatted',
         'discounted_price_formatted',
@@ -27,6 +49,7 @@ class SubscriptionPlanAdmin(admin.ModelAdmin):
     list_filter = (
         'duration',
         'is_active',
+        "has_installment",
         'created_at',
         'updated_at'
     )
@@ -55,6 +78,13 @@ class SubscriptionPlanAdmin(admin.ModelAdmin):
         (_('ویژگی‌های پلن'), {
             'fields': (
                 'discount_percentage',
+            )
+        }),
+        (_("تنظیمات قسطی"), {
+            'fields': (
+                'has_installment',
+                'min_installment_months',
+                'max_installments'
             )
         }),
         (_('تاریخ‌ها'), {
@@ -251,3 +281,8 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
         self.message_user(request, f'{updated} اشتراک با موفقیت لغو شد.')
 
     mark_as_canceled.short_description = _('لغو اشتراک‌های انتخاب شده')
+
+
+@admin.register(InstallmentPlan)
+class InstallmentPlanAdmin(admin.ModelAdmin):
+    pass
