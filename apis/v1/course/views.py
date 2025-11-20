@@ -94,6 +94,9 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
         return super().retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Question.objects.none()
+
         base_query = Section.objects.filter(
             is_active=True,
             course__lesson_course__exact=self.kwargs["lesson_course_pk"]
@@ -161,6 +164,9 @@ class QuestionView(ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Question.objects.none()
+
         user_id = self.request.user.id
         # check student attempts
         if not StudentExamAttempt.objects.filter(
@@ -222,6 +228,9 @@ class StudentAnswerViewSet(
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Question.objects.none()
+
         user_id = self.request.user.id
         return StudentAnswer.objects.filter(
             student__user_id=user_id,
@@ -284,6 +293,9 @@ class CategoryCommentViewSet(viewsets.ModelViewSet):
             return ListDetailCategoryCommentSerializer
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Question.objects.none()
+
         return CategoryComment.objects.filter(
             is_active=True,
             category_id=self.kwargs["category_pk"],
