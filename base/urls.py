@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from decouple import config
 
+
 urlpatterns = [
     # admin pannel
     path('admin/', admin.site.urls),
@@ -24,6 +25,13 @@ SHOW_DEBUGGER_TOOLBAR = config("SHOW_DEBUGGER_TOOLBAR", cast=bool, default=True)
 if SHOW_DEBUGGER_TOOLBAR:
     from debug_toolbar.toolbar import debug_toolbar_urls
     urlpatterns += debug_toolbar_urls()
+
+USE_DJANGO_STORAGES = config("USE_DJANGO_STORAGES", cast=bool, default=False)
+if USE_DJANGO_STORAGES is False:
+    from django.conf.urls.static import static
+    from django.conf import settings
+
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 admin.site.site_header = _('پنل مدیریت سیستم')
 admin.site.site_title = _('مدیریت')

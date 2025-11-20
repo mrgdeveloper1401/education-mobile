@@ -8,6 +8,7 @@ router = SimpleRouter()
 router.register("lesson_course", views.ListLessonClassView, basename="lesson_course")
 router.register("student_exam_attempts", views.StudentExamAttemptView, basename='student_exam_attempts')
 router.register("category", views.ListDetailCategoryView, basename="category")
+router.register("upload_attachment", views.UploadAttachmentView, basename="upload_attachment")
 
 lesson_course_router = NestedSimpleRouter(router, r"lesson_course", lookup="lesson_course")
 lesson_course_router.register("sections", views.SectionLessonCourseViewSet, basename="sections")

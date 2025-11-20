@@ -252,7 +252,7 @@ else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
-USE_LOG = config("USE_LOG", cast=bool, default=False)
+USE_LOG = config("USE_LOG", cast=bool, default=True)
 if USE_LOG:
     log_dir = os.path.join('general_log_django', timezone.now().strftime("%Y-%m-%d"))
     os.makedirs(log_dir, exist_ok=True)

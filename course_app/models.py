@@ -190,9 +190,41 @@ class CategoryComment(MP_Node, CreateMixin, UpdateMixin, ActiveMixin):
         related_name='category_comments',
         verbose_name=_("دسته بندی")
     )
+    # attachment = models.ForeignKey(
+    #     "CommentAttachment",
+    #     on_delete=models.PROTECT,
+    #     related_name='attachment_comments',
+    #     verbose_name=_("فایل"),
+    #     null=True,
+    #     blank=True
+    # )
     comment_body = models.JSONField(_("متن کامنت"), default=dict)
     is_pined = models.BooleanField(default=False, verbose_name=_("پین شده"))
 
     class Meta:
         db_table = 'category_comment'
+        verbose_name = _("نظر")
+        verbose_name_plural = _("نظرها")
         ordering = ("id",)
+
+
+class CommentAttachment(CreateMixin, UpdateMixin, ActiveMixin):
+    """مدل برای فایل‌های پیوست کامنت"""
+    comment = models.ForeignKey(
+        CategoryComment,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        verbose_name=_("کامنت")
+    )
+    file = models.ForeignKey(
+        "core_app.Attachment",
+        on_delete=models.PROTECT,
+        related_name='comment_attachments',
+        verbose_name=_("فایل")
+    )
+
+    class Meta:
+        db_table = "comment_attachment"
+        verbose_name = _("پیوست کامنت")
+        verbose_name_plural = _("پیوست‌های کامنت")
+        # ordering = ('id',)

@@ -187,3 +187,152 @@ class Video(CreateMixin, UpdateMixin, ActiveMixin):
     @property
     def get_video_file_url(self):
         return self.video_file.url
+
+
+class Attachment(CreateMixin, UpdateMixin, ActiveMixin):
+    """
+    مدل پایه برای مدیریت فایل‌های پیوست در سرتاسر سیستم
+    """
+
+    FILE_TYPES = [
+        ('image', _("عکس")),
+        ('video', _("ویدیو")),
+        ('audio', _("صدا")),
+        ('document', _("سند")),
+        ('archive', _("آرشیو")),
+        ('other', _("سایر")),
+    ]
+
+    IMAGE_EXTENSIONS = ('jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg')
+    VIDEO_EXTENSIONS = ('mp4', 'avi', 'mov', 'wmv', 'flv', 'webm')
+    AUDIO_EXTENSIONS = ('mp3', 'wav', 'ogg', 'm4a', 'flac')
+    DOCUMENT_EXTENSIONS = ('pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt')
+    ARCHIVE_EXTENSIONS = ('zip', 'rar', '7z', 'tar', 'gz')
+
+    # کاربر
+    upload_by = models.ForeignKey(
+        "auth_app.User",
+        on_delete=models.PROTECT,
+        related_name="user_attachments",
+        null=True,
+        blank=True # TODO when clean migration remove these field
+    )
+    # name = models.CharField(_("نام فایل"), max_length=255)
+    file = models.FileField(
+        _("فایل"),
+        upload_to='attachments/%Y/%m/%d/',
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=IMAGE_EXTENSIONS + VIDEO_EXTENSIONS +
+                                   AUDIO_EXTENSIONS + DOCUMENT_EXTENSIONS +
+                                   ARCHIVE_EXTENSIONS
+            )
+        ]
+    )
+    file_type = models.CharField(
+        _("نوع فایل"),
+        max_length=20,
+        choices=FILE_TYPES,
+        default='other'
+    )
+    file_size = models.BigIntegerField(_("حجم فایل (بایت)"), default=0)
+    mime_type = models.CharField(_("نوع MIME"), max_length=100, blank=True)
+
+    # متادیتا برای فایل‌های مختلف
+    # metadata = models.JSONField(_("متادیتا"), default=dict, blank=True)
+
+    # برای فایل‌های تصویری
+    width = models.IntegerField(_("عرض (پیکسل)"), null=True, blank=True)
+    height = models.IntegerField(_("ارتفاع (پیکسل)"), null=True, blank=True)
+
+    # برای فایل‌های صوتی/ویدیویی
+    duration = models.FloatField(_("مدت زمان (ثانیه)"), null=True, blank=True)
+
+    # امنیت و دسترسی
+    # is_public = models.BooleanField(_("دسترسی عمومی"), default=True)
+    # access_token = models.CharField(
+    #     _("توکن دسترسی"),
+    #     max_length=50,
+    #     unique=True,
+    #     blank=True,
+    #     null=True
+    # )
+
+    class Meta:
+        db_table = "attachment"
+        verbose_name = _("پیوست")
+        verbose_name_plural = _("پیوست‌ها")
+        ordering = ('id',)
+        # indexes = [
+        #     models.Index(fields=['file_type']),
+        #     models.Index(fields=['is_public', 'is_active']),
+        # ]
+
+    # def __str__(self):
+    #     return f"{self.name} ({self.get_file_type_display()})"
+
+    def save(self, *args, **kwargs):
+        # محاسبه خودکار حجم فایل
+        self.file_size = self.file.size
+
+        # تشخیص خودکار نوع فایل
+        self._auto_detect_file_type()
+
+        # تولید توکن دسترسی اگر وجود ندارد
+        # if not self.access_token:
+        #     import secrets
+        #     self.access_token = secrets.token_urlsafe(32)
+
+        super().save(*args, **kwargs)
+
+    def _auto_detect_file_type(self):
+        """تشخیص خودکار نوع فایل بر اساس پسوند"""
+        extension = self.file.name.split('.')[-1].lower() if self.file.name else ''
+
+        if extension in self.IMAGE_EXTENSIONS:
+            self.file_type = 'image'
+        elif extension in self.VIDEO_EXTENSIONS:
+            self.file_type = 'video'
+        elif extension in self.AUDIO_EXTENSIONS:
+            self.file_type = 'audio'
+        elif extension in self.DOCUMENT_EXTENSIONS:
+            self.file_type = 'document'
+        elif extension in self.ARCHIVE_EXTENSIONS:
+            self.file_type = 'archive'
+        else:
+            self.file_type = 'other'
+
+    # def get_file_url(self):
+    #     """دریافت URL فایل با توکن امنیتی"""
+    #     if self.is_public:
+    #         return self.file.url
+    #     else:
+    #         return f"{self.file.url}?token={self.access_token}"
+
+    @property
+    def human_readable_size(self):
+        """حجم فایل به صورت خوانا برای انسان"""
+        if self.file_size == 0:
+            return "0 KB"
+        else:
+            return f"{round(self.file_size/1024, 2)} KB"
+
+    @property
+    def is_image(self):
+        return self.file_type == 'image'
+
+    @property
+    def is_video(self):
+        return self.file_type == 'video'
+
+    @property
+    def is_audio(self):
+        return self.file_type == 'audio'
+
+    @property
+    def is_document(self):
+        return self.file_type == 'document'
+
+    @property
+    def attachment_url(self):
+        return self.file.url

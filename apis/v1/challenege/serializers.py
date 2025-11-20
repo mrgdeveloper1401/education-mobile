@@ -14,5 +14,4 @@ class ChallengeSerializer(serializers.ModelSerializer):
             "success_percent",
             "points",
             "coins",
-            ""
         )

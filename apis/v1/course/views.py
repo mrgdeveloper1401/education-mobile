@@ -1,27 +1,36 @@
 from django.db.models import Prefetch, Exists, OuterRef
 from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_view
-from rest_framework import mixins, viewsets, permissions, generics
+from rest_framework import mixins, viewsets, permissions
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
+from core_app.models import Attachment
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
-from . import serializers
-from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, CategoryComment
+from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, CategoryComment, \
+    CommentAttachment
 from .serializers import (
     CreateStudentExamAttemptSerializer,
     ListDetailStudentExamAttemptSerializer,
     StudentAnswerSerializer,
     CategoryCommentSerializer,
     ListDetailCategoryCommentSerializer,
-    UpdateCategoryCommentSerializer
+    UpdateCategoryCommentSerializer,
+    UploadAttachmentSerializer,
+    ListCategorySerializer,
+    ListClassSerializer,
+    ExamQuestionSerializer,
+    SectionLessonCourseSerializer,
+    DetailSectionLessonCourseSerializer
 )
 from ...utils.custom_pagination import TwentyPageNumberPagination, ScrollPagination
 from ...utils.custom_permissions import IsOwnerOrReadOnly
+from ...utils.custom_response import response
 
 
 class ListDetailCategoryView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    serializer_class = serializers.ListCategorySerializer
+    serializer_class = ListCategorySerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Category.objects.filter(
         is_active=True
@@ -31,7 +40,7 @@ class ListDetailCategoryView(mixins.ListModelMixin, mixins.RetrieveModelMixin, v
 
 
 class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    serializer_class = serializers.ListClassSerializer
+    serializer_class = ListClassSerializer
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = TwentyPageNumberPagination
 
@@ -51,7 +60,7 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
 
 
 class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    serializer_class = serializers.SectionLessonCourseSerializer
+    serializer_class = SectionLessonCourseSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     @extend_schema(
@@ -142,7 +151,7 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
 
     def get_serializer_class(self):
         if self.action == "retrieve":
-            return serializers.DetailSectionLessonCourseSerializer
+            return DetailSectionLessonCourseSerializer
         return super().get_serializer_class()
 
 
@@ -150,7 +159,7 @@ class QuestionView(ListAPIView):
     """
     نمایش سوالات ازمون
     """
-    serializer_class = serializers.ExamQuestionSerializer
+    serializer_class = ExamQuestionSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
@@ -290,6 +299,12 @@ class CategoryCommentViewSet(viewsets.ModelViewSet):
             "path",
             "created_at",
             "updated_at",
+        ).prefetch_related(
+            Prefetch(
+                "attachments", CommentAttachment.objects.filter(
+                    is_active=True
+                ).select_related("file").only("file__file", "comment_id", 'file__file_type')
+            )
         )
 
     def get_serializer_context(self):
@@ -300,3 +315,16 @@ class CategoryCommentViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
+
+
+class UploadAttachmentView(
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    serializer_class = UploadAttachmentSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return Attachment.objects.filter(upload_by_id=self.request.user.id).only("file")

@@ -1,11 +1,13 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 from rest_framework.generics import get_object_or_404
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
 
 
 from auth_app.models import Student
-from course_app.models import Category, LessonCourse, Section, SectionVideo, CategoryComment
+from core_app.models import Attachment
+from course_app.models import Category, LessonCourse, Section, SectionVideo, CategoryComment, CommentAttachment
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 
 
@@ -212,9 +214,29 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         return student_answer
 
 
+class CommentAttachmentSerializer(serializers.ModelSerializer):
+    file_link = serializers.SerializerMethodField()
+    file_type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CommentAttachment
+        fields = (
+            "id",
+            "file_link",
+            "file_type"
+        )
+
+    def get_file_link(self, obj):
+        return obj.file.attachment_url if obj.file else None
+
+    def get_file_type(self, obj):
+        return obj.file.file_type
+
+
 class ListDetailCategoryCommentSerializer(serializers.ModelSerializer):
     is_owner = serializers.SerializerMethodField()
     user_name = serializers.SerializerMethodField()
+    attachments = CommentAttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = CategoryComment
@@ -230,8 +252,24 @@ class ListDetailCategoryCommentSerializer(serializers.ModelSerializer):
         return True if obj.user_id == user_id else False
 
 
+class UploadAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = ("id", "file")
+
+    def create(self, validated_data):
+        user_id = self.context["request"].user.id
+        return Attachment.objects.create(upload_by_id=user_id, **validated_data)
+
+
 class CategoryCommentSerializer(serializers.ModelSerializer):
     parent = serializers.IntegerField(required=False)
+    attachment = serializers.ListSerializer(
+        required=False,
+        child=serializers.IntegerField(),
+        allow_empty=True,
+        write_only=True
+    )
 
     class Meta:
         model = CategoryComment
@@ -239,21 +277,53 @@ class CategoryCommentSerializer(serializers.ModelSerializer):
             "id",
             "comment_body",
             "is_pined",
-            "parent"
+            "parent",
+            "attachment"
         )
+    def validate_attachment(self, value):
+        if value:
+            user_id = self.context['request'].user.id
+            existing_attachments = Attachment.objects.filter(
+                id__in=value,
+                is_active=True,
+                upload_by_id=user_id
+            ).only("id")
+
+            missing_attachments = len(value) != existing_attachments.count()
+            if missing_attachments:
+                raise serializers.ValidationError(
+                    f"some Attachment(s) not found."
+                )
+
+        return value
+
+    def create_bulk_comment_attachment(self, attachment, comment_id):
+        comment_attachment = [
+            CommentAttachment(
+                comment_id=comment_id,
+                file_id=i
+            )
+            for i in attachment
+        ]
+        if comment_attachment:
+            CommentAttachment.objects.bulk_create(comment_attachment)
 
     def create(self, validated_data):
         user_id = self.context['request'].user.id
         category_id = self.context['category_pk']
         parent = validated_data.pop("parent", None)
+        attachment = validated_data.pop("attachment", [])
 
         if parent:
             get_obj = get_object_or_404(CategoryComment, pk=parent)
             comment = get_obj.add_child(user_id=user_id, category_id=category_id, pk=parent, **validated_data)
-            return  comment
         else:
-            comment = CategoryComment.add_child(user_id=user_id, category_id=category_id, **validated_data)
-            return comment
+            comment = CategoryComment.add_root(user_id=user_id, category_id=category_id, **validated_data)
+
+        if attachment:
+            self.create_bulk_comment_attachment(attachment, comment.id)
+
+        return comment
 
 
 class UpdateCategoryCommentSerializer(serializers.ModelSerializer):
