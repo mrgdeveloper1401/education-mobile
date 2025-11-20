@@ -17,18 +17,6 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     filterset_class = ChallengeFilter
     pagination_class = ScrollPagination
-    @extend_schema(
-        parameters=(
-            OpenApiParameter(
-            name="challenge_id",
-            type=int,
-            description="Challenge ID",
-            location=OpenApiParameter.PATH,
-        ),
-        ),
-    )
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
         base_query = Challenge.objects.filter(is_active=True).select_related("image")
