@@ -31,6 +31,8 @@ services:
       - 8000
     ports:
       - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   redis:
     container_name: education_mobile_redis
