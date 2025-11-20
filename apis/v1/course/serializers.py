@@ -214,10 +214,15 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
 
 class ListDetailCategoryCommentSerializer(serializers.ModelSerializer):
     is_owner = serializers.SerializerMethodField()
+    user_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CategoryComment
         exclude = ("is_active", "category")
+
+    @extend_schema_field(serializers.CharField())
+    def get_user_name(self, obj):
+        return obj.user.get_full_name
 
     @extend_schema_field(serializers.BooleanField())
     def get_is_owner(self, obj):

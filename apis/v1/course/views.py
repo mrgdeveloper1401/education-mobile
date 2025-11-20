@@ -280,7 +280,17 @@ class CategoryCommentViewSet(viewsets.ModelViewSet):
         return CategoryComment.objects.filter(
             is_active=True,
             category_id=self.kwargs["category_pk"],
-        ).order_by("-id").defer("is_active", "category")
+        ).select_related("user").order_by("-id").only(
+            "user__first_name",
+            "user__last_name",
+            "comment_body",
+            "is_pined",
+            "depth",
+            "numchild",
+            "path",
+            "created_at",
+            "updated_at",
+        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
