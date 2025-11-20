@@ -245,11 +245,11 @@ class CategoryCommentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_id = self.context['request'].user.id
         category_id = self.context['category_pk']
-        parent = validated_data.pop("parent")
+        parent = validated_data.pop("parent", None)
 
         if parent:
             get_obj = get_object_or_404(CategoryComment, pk=parent)
-            comment = CategoryComment.add_child(user_id=user_id, category_id=category_id, pk=parent, **validated_data)
+            comment = get_obj.add_child(user_id=user_id, category_id=category_id, pk=parent, **validated_data)
             return  comment
         else:
             comment = CategoryComment.add_child(user_id=user_id, category_id=category_id, **validated_data)
