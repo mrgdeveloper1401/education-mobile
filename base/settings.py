@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "treebeard",
     "django_json_widget",
     "rest_framework_simplejwt.token_blacklist",
+    "django_filters",
 
     # app
     "auth_app",
@@ -303,6 +304,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'otp': '1/minute',
     },
+'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
 # jwt config

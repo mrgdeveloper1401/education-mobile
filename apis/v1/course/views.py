@@ -4,7 +4,6 @@ from rest_framework import mixins, viewsets, permissions
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
 
 from core_app.models import Attachment
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
@@ -26,7 +25,6 @@ from .serializers import (
 )
 from ...utils.custom_pagination import TwentyPageNumberPagination, ScrollPagination
 from ...utils.custom_permissions import IsOwnerOrReadOnly
-from ...utils.custom_response import response
 
 
 class ListDetailCategoryView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):

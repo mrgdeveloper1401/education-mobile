@@ -226,9 +226,11 @@ class CommentAttachmentSerializer(serializers.ModelSerializer):
             "file_type"
         )
 
+    @extend_schema_field(serializers.URLField())
     def get_file_link(self, obj):
         return obj.file.attachment_url if obj.file else None
 
+    @extend_schema_field(serializers.CharField())
     def get_file_type(self, obj):
         return obj.file.file_type
 
