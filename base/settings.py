@@ -155,6 +155,13 @@ if SHOW_DEBUGGER_TOOLBAR:
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS += ips
 
+    def show_toolbar(request):
+        return SHOW_DEBUGGER_TOOLBAR
+
+    DEBUG_TOOLBAR_CONFIG = {
+        "SHOW_TOOLBAR_CALLBACK": show_toolbar,
+    }
+
 USE_SSL_CONFIG = config("USE_SSL_CONFIG", cast=bool, default=False)
 if USE_SSL_CONFIG:
     # Https/ssl settings
