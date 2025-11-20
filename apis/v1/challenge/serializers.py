@@ -1,7 +1,7 @@
 from drf_spectacular.utils import extend_schema, extend_schema_field
 from rest_framework import serializers
 
-from challenge_app.models import Challenge
+from challenge_app.models import Challenge, TestCase
 
 
 class ListChallengeSerializer(serializers.ModelSerializer):
@@ -25,7 +25,20 @@ class ListChallengeSerializer(serializers.ModelSerializer):
         return obj.image.course_image
 
 
+class TestCateChallengeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestCase
+        fields = (
+            "id",
+            "input_data",
+            "expected_output",
+            "order"
+        )
+
+
 class DetailChallengeSerializer(ListChallengeSerializer):
+    test_cases = TestCateChallengeSerializer(many=True, read_only=True)
+
     class Meta(ListChallengeSerializer.Meta):
         fields = ListChallengeSerializer.Meta.fields + (
             "description",
@@ -34,4 +47,5 @@ class DetailChallengeSerializer(ListChallengeSerializer):
             "total_submissions",
             "successful_submissions",
             "avg_completion_time",
+            'test_cases'
         )
