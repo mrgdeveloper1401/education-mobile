@@ -1,4 +1,5 @@
 import os
+import socket
 from datetime import timedelta
 from pathlib import Path
 from decouple import config, Csv
@@ -148,7 +149,11 @@ if SHOW_DEBUGGER_TOOLBAR:
     MIDDLEWARE += [
         "debug_toolbar.middleware.DebugToolbarMiddleware"
     ]
-    INTERNAL_IPS = ["127.0.0.1"]
+    INTERNAL_IPS = config("INTERNAL_IPS", cast=Csv(), default=["127.0.0.1"])
+
+    # get ip
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS += ips
 
 USE_SSL_CONFIG = config("USE_SSL_CONFIG", cast=bool, default=False)
 if USE_SSL_CONFIG:
