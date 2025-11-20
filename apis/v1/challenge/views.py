@@ -6,6 +6,7 @@ from rest_framework.exceptions import NotAcceptable
 from challenge_app.models import Challenge, TestCase
 from .filters import ChallengeFilter
 from .serializers import ListChallengeSerializer, DetailChallengeSerializer
+from ...utils.custom_pagination import ScrollPagination
 
 
 class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
@@ -15,6 +16,7 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     language --> (PY, JA, HTML, C#, JS, C++)
     """
     filterset_class = ChallengeFilter
+    pagination_class = ScrollPagination
     @extend_schema(
         parameters=(
             OpenApiParameter(
