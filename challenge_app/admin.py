@@ -57,6 +57,8 @@ class ChallengeAdmin(admin.ModelAdmin):
     )
     list_editable = ('status', 'points', 'is_active')
     # prepopulated_fields = {'slug': ('name',)}
+    list_per_page = 20
+    list_max_show_all = 100
 
     fieldsets = (
         (None, {
@@ -150,15 +152,21 @@ class ChallengeAdmin(admin.ModelAdmin):
 @admin.register(TestCase)
 class TestCaseAdmin(admin.ModelAdmin):
     list_display = (
-        'challenge',
+        'challenge_id',
+        "get_challenge_name",
+        "id",
         'get_input_preview',
         'get_output_preview',
         'order',
         'created_at'
     )
+    list_display_links = ("id", "challenge_id", "get_challenge_name")
     list_filter = ('challenge__language', 'challenge__level')
-    search_fields = ('challenge__name', 'input_data', 'expected_output')
+    search_fields = ('challenge__name',)
+    search_help_text = _("برای جست و جو میتوانید از نام چالش استفاده کنید")
     list_editable = ('order',)
+    list_per_page = 30
+    list_max_show_all = 100
 
     fieldsets = (
         (None, {
@@ -176,9 +184,12 @@ class TestCaseAdmin(admin.ModelAdmin):
             )
         }),
     )
+    readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("challenge",)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('challenge')
+        fields = ("input_data", "expected_output", "order", "is_active", "created_at", "updated_at", "challenge__name")
+        return super().get_queryset(request).select_related('challenge').only(*fields)
 
     def get_input_preview(self, obj):
         if len(obj.input_data) > 50:
@@ -194,42 +205,32 @@ class TestCaseAdmin(admin.ModelAdmin):
 
     get_output_preview.short_description = _("خروجی مورد انتظار")
 
-
-class StatusFilter(admin.SimpleListFilter):
-    title = _("وضعیت ارسال")
-    parameter_name = 'status'
-
-    def lookups(self, request, model_admin):
-        return ChallengeSubmission.STATUS_CHOICES
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(status=self.value())
+    def get_challenge_name(self, obj):
+        return obj.challenge.name
 
 
 @admin.register(ChallengeSubmission)
 class ChallengeSubmissionAdmin(admin.ModelAdmin):
     list_display = (
         'id',
-        'user',
-        'challenge',
+        'get_user_mobile',
+        'get_challenge_name',
         'language',
         'status',
         'execution_time',
         'score',
         'created_at'
     )
+    list_display_links = ("get_user_mobile", "id", "get_challenge_name")
     list_filter = (
-        StatusFilter,
-        'language',
+        "status",
+        'challenge__language',
         'challenge__level',
         'created_at'
     )
     search_fields = (
-        'user__username',
-        'user__email',
+        'user__mobile_phone',
         'challenge__name',
-        'code'
     )
     readonly_fields = (
         'user',
@@ -275,7 +276,22 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            'user', 'challenge'
+            'user',
+            'challenge'
+        ).only(
+            "user__mobile_phone",
+            "challenge__name",
+            "challenge__level",
+            "challenge__language",
+            "language",
+            "status",
+            "test_results",
+            "created_at",
+            "updated_at",
+            "is_active",
+            "execution_time",
+            "memory_used",
+            "score",
         )
 
     def get_status_color(self, obj):
@@ -306,12 +322,24 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
             obj.challenge.update_statistics()
         super().save_model(request, obj, form, change)
 
+    def get_user_mobile(self, obj):
+        return obj.user.mobile_phone
+
+    get_user_mobile.short_description = _("موبایل کاربر")
+    get_user_mobile.admin_order_field = 'user__mobile_phone'
+
+    def get_challenge_name(self, obj):
+        return obj.challenge.name
+
+    get_challenge_name.short_description = _("نام چالش")
+    get_challenge_name.admin_order_field = 'challenge__name'
+
 
 @admin.register(UserChallengeProgress)
 class UserChallengeProgressAdmin(admin.ModelAdmin):
     list_display = (
-        'user',
-        'challenge',
+        'user_id',
+        'challenge_id',
         'is_completed',
         'best_score',
         'attempts_count',
@@ -323,10 +351,10 @@ class UserChallengeProgressAdmin(admin.ModelAdmin):
         'challenge__language'
     )
     search_fields = (
-        'user__username',
-        'user__email',
+        'user__mobile_phone',
         'challenge__name'
     )
+    search_help_text = _("برای جست و جو میتوانید از شماه موبایل یا نام چالش استفاده کنید")
     readonly_fields = (
         'user',
         'challenge',
@@ -362,7 +390,16 @@ class UserChallengeProgressAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            'user', 'challenge', 'best_submission'
+            'user', 'challenge'
+        ).only(
+            "user__mobile_phone",
+            "challenge__name",
+            "challenge__level",
+            "challenge__language",
+            "is_completed",
+            "completed_at",
+            "attempts_count",
+            "best_score",
         )
 
     def has_add_permission(self, request):
