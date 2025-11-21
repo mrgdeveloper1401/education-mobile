@@ -2,11 +2,12 @@ import datetime
 import time
 import random
 
-from django.contrib.auth import aauthenticate
+from django.contrib.auth import aauthenticate, authenticate
 from pytz import timezone as pytz_timezone
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import mixins, viewsets
 from asgiref.sync import sync_to_async
@@ -23,7 +24,7 @@ from .serializers import (
     UploadImageSerializer,
     LogInByPhoneSerializer
 )
-from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, AsyncIsAuthenticated
+from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, AsyncIsAuthenticated, NotAuthenticate
 from apis.utils.custom_response import response
 from base.settings import SIMPLE_JWT
 from ...utils.custom_exceptions import UserNotFoundException, UserBlockException
@@ -176,11 +177,11 @@ class UploadImageView(AsyncAPIView):
         )
 
 
-class LoginByPhonePasswordView(AsyncAPIView):
+class LoginByPhonePasswordView(APIView):
     serializer_class = LogInByPhoneSerializer
-    permission_classes = (AsyncRemoveAuthenticationPermissions,)
+    permission_classes = (NotAuthenticate,)
 
-    async def post(self, request):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -188,14 +189,14 @@ class LoginByPhonePasswordView(AsyncAPIView):
         phone = serializer.validated_data['mobile_phone']
         password = serializer.validated_data['password']
 
-        user = await aauthenticate(request, mobile_phone=phone, password=password)
+        user = authenticate(request, mobile_phone=phone, password=password)
         if user is None:
             raise UserNotFoundException()
         else:
             if user.is_active is False:
                 raise UserBlockException()
             else:
-                token = await sync_to_async((RefreshToken.for_user))(user)
+                token =  RefreshToken.for_user(user)
                 iran_timezone = pytz_timezone("Asia/Tehran")
                 expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
                 expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
@@ -207,7 +208,7 @@ class LoginByPhonePasswordView(AsyncAPIView):
                     "expire_timestamp_access_token": expire_timestamp,
                     "expire_date_access_token": expire_date
                 }
-                await grant_mobile_sections_access(user.id) # access two section into user
+                grant_mobile_sections_access(user.id) # access two section into user
                 return response(
                     status=True,
                     message="پردازش با موفقیت انجام شد",

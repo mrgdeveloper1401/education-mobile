@@ -57,6 +57,6 @@ class UploadImageSerializer(AdrfModelSerializer):
         )
 
 
-class LogInByPhoneSerializer(AdrfSerializer):
+class LogInByPhoneSerializer(serializers.Serializer):
     mobile_phone = serializers.CharField(validators=(MobileRegexValidator(),),)
     password = serializers.CharField()

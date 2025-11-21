@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from django.utils.translation import gettext_lazy as _
 
 from apis.utils.custom_exceptions import AuthenticationFailed
 
@@ -24,3 +25,10 @@ class IsOwnerOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
                 return True
             else:
                 return False
+
+
+class NotAuthenticate(permissions.BasePermission):
+    message = _("کاربر لاگین شده اجازه دسترسی را ندارد")
+
+    def has_permission(self, request, view):
+        return not request.user.is_authenticated
