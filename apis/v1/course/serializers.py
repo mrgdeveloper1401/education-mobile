@@ -1,3 +1,4 @@
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
@@ -265,7 +266,7 @@ class UploadAttachmentSerializer(serializers.ModelSerializer):
 
 
 class CategoryCommentSerializer(serializers.ModelSerializer):
-    parent = serializers.IntegerField(required=False)
+    parent = serializers.IntegerField(required=False, default=False)
     attachment = serializers.ListSerializer(
         required=False,
         child=serializers.IntegerField(),
@@ -318,7 +319,13 @@ class CategoryCommentSerializer(serializers.ModelSerializer):
 
         if parent:
             get_obj = get_object_or_404(CategoryComment, pk=parent)
-            comment = get_obj.add_child(user_id=user_id, category_id=category_id, pk=parent, **validated_data)
+            comment = get_obj.add_child(
+                user_id=user_id,
+                category_id=category_id,
+                pk=parent,
+                created_at=timezone.now(),
+                **validated_data
+            )
         else:
             comment = CategoryComment.add_root(user_id=user_id, category_id=category_id, **validated_data)
 

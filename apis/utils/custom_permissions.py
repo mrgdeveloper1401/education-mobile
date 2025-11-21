@@ -15,7 +15,7 @@ class AsyncIsAuthenticated(permissions.BasePermission):
         return bool(request.user and request.user.is_authenticated)
 
 
-class IsOwnerOrReadOnly(permissions.IsAuthenticated):
+class IsOwnerOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
     def has_object_permission(self, request, view, obj):
         if obj.user_id == request.user.id:
             return True
