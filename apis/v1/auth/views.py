@@ -118,7 +118,7 @@ class OtpVerifyView(AsyncAPIView):
                     "expire_date_access_token": expire_date
                 }
                 await cache.adelete(redis_key)
-                await grant_mobile_sections_access(user.id) # access two section into user
+                await sync_to_async(grant_mobile_sections_access)(user.id) # access two section into user
                 return response(
                     status=True,
                     message="پردازش با موفقیت انجام شد",
