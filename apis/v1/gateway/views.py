@@ -11,9 +11,16 @@ class GatewayView(APIView):
     serializer_class = GatewaySerializer
     permission_classes = (AsyncIsAuthenticated,)
 
+    async def _create_gateway_record(self, user_id, subscription_id, result):
+        await GatewayModel.objects.acreate(
+            user_id=user_id,
+            subscription_id=subscription_id,
+            track_id=result['track_id'],
+            message_gateway=result['message'],
+            result_gateway=result['result'],
+        )
+
     async def post(self, request):
-        import ipdb
-        ipdb.set_trace()
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -38,15 +45,11 @@ class GatewayView(APIView):
             mobile=phone,
         )
 
-        # check result
+        # create gateway record
+        await self._create_gateway_record(user_id, subscription_id, result)
+
+        # check result and return response
         if result['result'] == 100:
-            await GatewayModel.objects.acreate(
-                user_id=user_id,
-                subscription_id=subscription_id,
-                track_id=result['track_id'],
-                message_gateway=result['message'],
-                result_gateway=result['result'],
-            )
             return response(
                 status_code=201,
                 status=True,
@@ -55,13 +58,6 @@ class GatewayView(APIView):
                 message="پردازش با موفقیت انجام شد"
             )
         else:
-            await GatewayModel.objects.acreate(
-                user_id=user_id,
-                subscription_id=subscription_id,
-                track_id=result['track_id'],
-                message_gateway=result['message'],
-                result_gateway=result['result'],
-            )
             return response(
                 status_code=400,
                 status=False,
