@@ -386,7 +386,7 @@ class StudentAccessSectionAdmin(admin.ModelAdmin):
 
 
 @admin.register(CategoryComment)
-class CategoryCommentAdmin(TreeAdmin):
+class CategoryCommentAdmin(admin.ModelAdmin):
     list_editable = ("is_active", "is_pined")
     form = movenodeform_factory(CategoryComment)
     raw_id_fields = ("user", "category")
