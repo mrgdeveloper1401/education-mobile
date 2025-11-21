@@ -318,7 +318,7 @@ class CategoryCommentSerializer(serializers.ModelSerializer):
         attachment = validated_data.pop("attachment", [])
 
         if parent:
-            get_obj = get_object_or_404(CategoryComment, pk=parent)
+            get_obj = get_object_or_404(CategoryComment, pk=parent, is_active=True)
             comment = get_obj.add_child(
                 user_id=user_id,
                 category_id=category_id,
