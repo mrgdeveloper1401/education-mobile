@@ -2,6 +2,8 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from treebeard.mp_tree import MP_Node
 from django.utils.translation import gettext_lazy as _
+from mptt.models import MPTTModel, TreeForeignKey
+
 
 from core_app.models import CreateMixin, UpdateMixin, ActiveMixin
 from course_app.enums import ProgresChoices, StudentStatusEnum
@@ -176,7 +178,7 @@ class StudentAccessSection(CreateMixin, UpdateMixin, ActiveMixin):
         db_table = "student_access_section"
 
 
-class CategoryComment(MP_Node, CreateMixin, UpdateMixin, ActiveMixin):
+class CategoryComment(MPTTModel, CreateMixin, UpdateMixin, ActiveMixin):
     user = models.ForeignKey(
         'auth_app.User',
         on_delete=models.PROTECT,
@@ -190,24 +192,18 @@ class CategoryComment(MP_Node, CreateMixin, UpdateMixin, ActiveMixin):
         related_name='category_comments',
         verbose_name=_("دسته بندی")
     )
-    # attachment = models.ForeignKey(
-    #     "CommentAttachment",
-    #     on_delete=models.PROTECT,
-    #     related_name='attachment_comments',
-    #     verbose_name=_("فایل"),
-    #     null=True,
-    #     blank=True
-    # )
+    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     comment_body = models.JSONField(_("متن کامنت"), default=dict)
     is_pined = models.BooleanField(default=False, verbose_name=_("پین شده"))
-
-    node_order_by = ("id",)
 
     class Meta:
         db_table = 'category_comment'
         verbose_name = _("نظر")
         verbose_name_plural = _("نظرها")
         ordering = ("id",)
+
+    class MPTTMeta:
+        order_insertion_by = ("id",)
 
 
 class CommentAttachment(CreateMixin, UpdateMixin, ActiveMixin):

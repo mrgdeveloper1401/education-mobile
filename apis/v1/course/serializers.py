@@ -266,7 +266,11 @@ class UploadAttachmentSerializer(serializers.ModelSerializer):
 
 
 class CategoryCommentSerializer(serializers.ModelSerializer):
-    parent = serializers.IntegerField(required=False, default=False)
+    parent = serializers.PrimaryKeyRelatedField(
+        queryset=CategoryComment.objects.only("id"),
+        required=False,
+        allow_null=True
+    )
     attachment = serializers.ListSerializer(
         required=False,
         child=serializers.IntegerField(),
@@ -283,6 +287,12 @@ class CategoryCommentSerializer(serializers.ModelSerializer):
             "parent",
             "attachment"
         )
+
+    def check_category_id(self, category_id):
+        check_obj = Category.objects.filter(id=category_id, is_active=True).only("id")
+        if not check_obj.exists():
+            raise NotFound(f"Category with id {category_id} not found")
+
     def validate_attachment(self, value):
         if value:
             user_id = self.context['request'].user.id
@@ -313,26 +323,27 @@ class CategoryCommentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_id = self.context['request'].user.id
-        category_id = self.context['category_pk']
+        category_id = int(self.context['category_pk'])
         parent = validated_data.pop("parent", None)
         attachment = validated_data.pop("attachment", [])
 
-        if parent:
-            get_obj = get_object_or_404(CategoryComment, pk=parent, is_active=True)
-            comment = get_obj.add_child(
+        self.check_category_id(category_id=category_id)
+
+        try:
+            comment = CategoryComment.objects.create(
                 user_id=user_id,
                 category_id=category_id,
-                pk=parent,
-                created_at=timezone.now(),
+                parent=parent,
                 **validated_data
             )
-        else:
-            comment = CategoryComment.add_root(user_id=user_id, category_id=category_id, **validated_data)
 
-        if attachment:
-            self.create_bulk_comment_attachment(attachment, comment.id)
+            if attachment:
+                self.create_bulk_comment_attachment(attachment, comment.id)
 
-        return comment
+            return comment
+
+        except Exception as e:
+            raise serializers.ValidationError({"error": f"Failed to create comment: {str(e)}"})
 
 
 class UpdateCategoryCommentSerializer(serializers.ModelSerializer):

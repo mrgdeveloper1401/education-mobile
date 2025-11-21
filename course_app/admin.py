@@ -4,6 +4,9 @@ from django.utils.translation import gettext_lazy as _
 from django_json_widget.widgets import JSONEditorWidget
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
+from mptt.admin import DraggableMPTTAdmin
+
+
 
 from .models import (
     Category, Course, LessonCourse, StudentEnrollment,
@@ -386,11 +389,11 @@ class StudentAccessSectionAdmin(admin.ModelAdmin):
 
 
 @admin.register(CategoryComment)
-class CategoryCommentAdmin(admin.ModelAdmin):
+class CategoryCommentAdmin(DraggableMPTTAdmin):
     list_editable = ("is_active", "is_pined")
     # form = movenodeform_factory(CategoryComment)
-    raw_id_fields = ("user", "category")
-    list_display = ('user_id', "id", 'category_id', 'is_pined', 'is_active')
+    raw_id_fields = ("user", "category", "parent")
+    list_display = ('user_id', "id", 'category_id', "parent_id", 'is_pined', 'is_active')
     search_fields = ('user__phone',)
     list_filter = ('is_pined', 'is_active')
     list_display_links = ("user_id", 'id', "category_id")
@@ -406,9 +409,11 @@ class CategoryCommentAdmin(admin.ModelAdmin):
             "is_pined",
             "is_active",
             "comment_body",
-            "path",
-            "depth",
-            "numchild",
+            "parent_id",
+            "tree_id",
+            "rght",
+            "lft",
+            "level",
             "created_at",
             "updated_at",
         )

@@ -76,8 +76,7 @@ class Photo(CreateMixin, UpdateMixin, ActiveMixin):
     upload_by = models.ForeignKey(
         "auth_app.User",
         related_name='user_photos',
-        on_delete=models.PROTECT,
-        null=True # TODO, when clean migration remove these filed
+        on_delete=models.PROTECT
     )
     class Meta:
         verbose_name = 'عکس'
@@ -214,8 +213,7 @@ class Attachment(CreateMixin, UpdateMixin, ActiveMixin):
         "auth_app.User",
         on_delete=models.PROTECT,
         related_name="user_attachments",
-        null=True,
-        blank=True # TODO when clean migration remove these field
+        null=True
     )
     # name = models.CharField(_("نام فایل"), max_length=255)
     file = models.FileField(

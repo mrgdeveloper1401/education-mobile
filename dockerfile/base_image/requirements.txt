@@ -76,3 +76,4 @@ psycopg[binary,pool]==3.2.12
 msgpack==1.1.2
 django-json-widget==2.1.0
 django-filter==25.2
+django-mptt==0.18.0

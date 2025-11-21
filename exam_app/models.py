@@ -104,8 +104,7 @@ class Choice(CreateMixin, UpdateMixin, ActiveMixin):
     )
     choice_text = models.CharField(
         max_length=500,
-        verbose_name=_("متن گزینه"),
-        blank=True # TODO, when clean migration remove field blank
+        verbose_name=_("متن گزینه")
     )
     is_correct = models.BooleanField(
         default=False,
@@ -174,8 +173,7 @@ class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
     student = models.ForeignKey(
         "auth_app.Student",
         on_delete=models.PROTECT,
-        related_name="student_answers",
-        null=True # TODO, when clean migration remove these field
+        related_name="student_answers"
     )
     attempt = models.ForeignKey(
         StudentExamAttempt,

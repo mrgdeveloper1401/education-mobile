@@ -29,7 +29,7 @@ from ...utils.custom_permissions import IsOwnerOrReadOnly
 
 class ListDetailCategoryView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = ListCategorySerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = Category.objects.filter(
         is_active=True
     ).only(
@@ -304,9 +304,11 @@ class CategoryCommentViewSet(viewsets.ModelViewSet):
             "user__last_name",
             "comment_body",
             "is_pined",
-            "depth",
-            "numchild",
-            "path",
+            "level",
+            "lft",
+            "tree_id",
+            "parent_id",
+            "rght",
             "created_at",
             "updated_at",
         ).prefetch_related(

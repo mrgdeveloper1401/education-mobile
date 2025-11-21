@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django_json_widget",
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",
+    "mptt",
 
     # app
     "auth_app",
