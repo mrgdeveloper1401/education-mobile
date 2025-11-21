@@ -388,7 +388,7 @@ class StudentAccessSectionAdmin(admin.ModelAdmin):
 @admin.register(CategoryComment)
 class CategoryCommentAdmin(admin.ModelAdmin):
     list_editable = ("is_active", "is_pined")
-    form = movenodeform_factory(CategoryComment)
+    # form = movenodeform_factory(CategoryComment)
     raw_id_fields = ("user", "category")
     list_display = ('user_id', "id", 'category_id', 'is_pined', 'is_active')
     search_fields = ('user__phone',)
@@ -408,7 +408,9 @@ class CategoryCommentAdmin(admin.ModelAdmin):
             "comment_body",
             "path",
             "depth",
-            "numchild"
+            "numchild",
+            "created_at",
+            "updated_at",
         )
 
 
@@ -422,5 +424,5 @@ def make_inactive(modeladmin, request, queryset):
     queryset.update(is_active=False)
 
 make_inactive.short_description = _("غیرفعال کردن موارد انتخاب شده")
-for model_admin in [CourseAdmin, LessonCourseAdmin, SectionAdmin, SectionVideoAdmin, CategoryCommentAdmin]:
+for model_admin in (CourseAdmin, LessonCourseAdmin, SectionAdmin, SectionVideoAdmin, CategoryCommentAdmin):
     model_admin.actions = (make_active, make_inactive)

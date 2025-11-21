@@ -201,6 +201,8 @@ class CategoryComment(MP_Node, CreateMixin, UpdateMixin, ActiveMixin):
     comment_body = models.JSONField(_("متن کامنت"), default=dict)
     is_pined = models.BooleanField(default=False, verbose_name=_("پین شده"))
 
+    node_order_by = ("id",)
+
     class Meta:
         db_table = 'category_comment'
         verbose_name = _("نظر")
@@ -212,7 +214,7 @@ class CommentAttachment(CreateMixin, UpdateMixin, ActiveMixin):
     """مدل برای فایل‌های پیوست کامنت"""
     comment = models.ForeignKey(
         CategoryComment,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='attachments',
         verbose_name=_("کامنت")
     )
