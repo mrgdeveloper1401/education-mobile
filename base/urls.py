@@ -20,6 +20,7 @@ urlpatterns = [
     path("v1/api/course/", include("apis.v1.course.urls", namespace="v1_course")),
     path('v1/api/subscription/', include("apis.v1.subscription.urls", namespace="v1_subscription")),
     path("v1/api/challenge/", include("apis.v1.challenge.urls", namespace="v1_challenge")),
+    path("v1/api/gateway/", include("apis.v1.gateway.urls", namespace="v1_gateway")),
 ]
 
 SHOW_DEBUGGER_TOOLBAR = config("SHOW_DEBUGGER_TOOLBAR", cast=bool, default=True)

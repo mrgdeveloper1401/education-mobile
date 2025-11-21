@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     "course_app",
     "exam_app",
     "subscription_app",
-    "challenge_app"
+    "challenge_app",
+    "gateway_app"
 ]
 
 MIDDLEWARE = [
@@ -361,3 +362,7 @@ AUTH_USER_MODEL = "auth_app.User"
 # cache session
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = config("SESSION_CACHE_ALIAS", cast=str, default="default")
+
+# gateway
+ZIBAL_API_KEY = config("ZIBAL_API_KEY", cast=str, default="")
+ZIBAL_REDIRECT_URL = config("ZIBAL_REDIRECT_URL", cast=str, default="")
