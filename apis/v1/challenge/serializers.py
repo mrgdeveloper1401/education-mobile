@@ -1,6 +1,6 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, NotAcceptable
 
 from challenge_app.models import Challenge, ChallengeSubmission
 
@@ -62,8 +62,6 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        import ipdb
-        ipdb.set_trace()
         user_id = self.context["request"].user.id
         challenge_id = self.context["challenge_id"]
 
@@ -71,8 +69,30 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
         if not check_obj.exists():
             raise NotFound("چالش مورد نظر پیدا نشد")
 
+        status_req_data = validated_data.get("status")
+
+        match status_req_data:
+            case "pending":
+                status_choice = "pending"
+            case "accepted":
+                status_choice = "accepted"
+            case "running":
+                status_choice = "running"
+            case "wrong_answer":
+                status_choice = "wrong_answer"
+            case "time_limit_exceeded":
+                status_choice = "time_limit_exceeded"
+            case "memory_limit_exceeded":
+                status_choice = "memory_limit_exceeded"
+            case "runtime_error":
+                status_choice = "runtime_error"
+            case "compilation_error":
+                status_choice = "compilation_error"
+            case _:
+                raise NotAcceptable()
+
         return ChallengeSubmission.objects.create(
             user_id=user_id,
             challenge_id=challenge_id,
-            **validated_data
+            status=status_choice
         )
