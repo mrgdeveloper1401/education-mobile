@@ -23,3 +23,9 @@ class UserBlockException(APIException):
     status_code = 403
     default_detail = "حساب کاربری شما مسدود میباشد با پشتیبان تماس بگیرد"
     default_code = 4
+
+
+class PlanAlreadyExistsException(APIException):
+    status_code = 403
+    default_detail = "کاربر محترم شما از قبل اشتراک فعال دارید"
+    default_code = 5

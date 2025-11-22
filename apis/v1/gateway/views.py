@@ -12,6 +12,7 @@ from discount_app.models import Coupon
 from gateway_app.models import Gateway as GatewayModel
 from subscription_app.models import SubscriptionPlan, UserSubscription
 from .serializer import GatewaySerializer
+from ...utils.custom_exceptions import PlanAlreadyExistsException
 from ...utils.custom_permissions import AsyncIsAuthenticated
 from ...utils.custom_response import response
 
@@ -55,6 +56,16 @@ class GatewayView(APIView):
 
         return min(price, 0)
 
+    async def check_active_plan(self, plan, user_id):
+        user_plan = await UserSubscription.objects.filter(
+            is_active=True,
+            user_id=user_id,
+        ).only(
+            "id", "status"
+        ).alast()
+        if user_plan and user_plan.status == "active":
+            raise PlanAlreadyExistsException()
+
     async def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -72,6 +83,9 @@ class GatewayView(APIView):
 
         # check plan
         plan = await self.check_plan(plain_id)
+
+        # check active plan
+        await self.check_active_plan(plan, user_id)
 
         # get price
         price = plan.discounted_price
