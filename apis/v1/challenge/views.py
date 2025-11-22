@@ -19,11 +19,12 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     """
     filterset_class = ChallengeFilter
     pagination_class = ScrollPagination
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         base_query = Challenge.objects.filter(is_active=True).select_related("image")
-        base_fields = ("name", "level", "success_percent", "points", "coins", "language", "image__image", "image__width", "image__height",)
-        detail_field = base_fields + ("description", "time_limit", "memory_limit", "total_submissions", "total_submissions", "avg_completion_time", "successful_submissions")
+        base_fields = ("name", "level", "success_percent", "successful_submissions", "points", "coins", "language", "image__image", "image__width", "image__height",)
+        detail_field = base_fields + ("description", )
         # test_cases_fields = ("input_data", "expected_output", "order", "challenge_id")
         if self.action == "list":
             base_query = base_query.only(*base_fields)

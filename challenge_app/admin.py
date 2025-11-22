@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
-from django.db.models import Count, Avg, JSONField
+from django.db.models import JSONField
 from django_json_widget.widgets import JSONEditorWidget
 
 from .models import Challenge, TestCase, ChallengeSubmission, UserChallengeProgress
@@ -219,10 +219,10 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
         'id',
         'get_user_mobile',
         'get_challenge_name',
-        'language',
+        # 'language',
         'status',
-        'execution_time',
-        'score',
+        # 'execution_time',
+        # 'score',
         'created_at'
     )
     list_display_links = ("get_user_mobile", "id", "get_challenge_name")
@@ -236,12 +236,13 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
         'user__mobile_phone',
         'challenge__name',
     )
+    search_help_text = _("برای جست و جو میتوانید از شماره موبایل کاربر یا نام چالش استفاده کنید")
     readonly_fields = (
         'user',
         'challenge',
-        'code',
-        'language',
-        'test_results',
+        # 'code',
+        # 'language',
+        # 'test_results',
         'created_at',
         'updated_at',
         'get_status_color'
@@ -252,24 +253,24 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
             'fields': (
                 'user',
                 'challenge',
-                'language',
-                'code'
+                # 'language',
+                # 'code'
             )
         }),
         (_("نتایج اجرا"), {
             'fields': (
                 'status',
                 'get_status_color',
-                'execution_time',
-                'memory_used',
-                'score'
+                # 'execution_time',
+                # 'memory_used',
+                # 'score'
             )
         }),
-        (_("نتایج تست‌ها"), {
-            'fields': (
-                'test_results',
-            )
-        }),
+        # (_("نتایج تست‌ها"), {
+        #     'fields': (
+        #         'test_results',
+        #     )
+        # }),
         (_("تاریخ‌ها"), {
             'fields': (
                 'created_at',
@@ -287,15 +288,15 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
             "challenge__name",
             "challenge__level",
             "challenge__language",
-            "language",
+            # "language",
             "status",
-            "test_results",
+            # "test_results",
             "created_at",
             "updated_at",
             "is_active",
-            "execution_time",
-            "memory_used",
-            "score",
+            # "execution_time",
+            # "memory_used",
+            # "score",
         )
 
     def get_status_color(self, obj):
@@ -317,8 +318,8 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
 
     get_status_color.short_description = _("وضعیت رنگی")
 
-    def has_add_permission(self, request):
-        return False  # کاربران نمی‌توانند از طریق ادمین ارسال ایجاد کنند
+    # def has_add_permission(self, request):
+    #     return False  # کاربران نمی‌توانند از طریق ادمین ارسال ایجاد کنند
 
     def save_model(self, request, obj, form, change):
         # اگر وضعیت تغییر کرد، آمار چالش را بروزرسانی کن

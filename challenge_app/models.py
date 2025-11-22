@@ -112,20 +112,20 @@ class ChallengeSubmission(CreateMixin, UpdateMixin, ActiveMixin):
         related_name='submissions',
         verbose_name=_("چالش")
     )
-    code = models.FileField(_("کد ارسالی"))
-    language = models.CharField(_("زبان برنامه‌نویسی"), max_length=50)
+    # code = models.FileField(_("کد ارسالی"))
+    # language = models.CharField(_("زبان برنامه‌نویسی"), max_length=50)
     status = models.CharField(
         _("وضعیت"),
         max_length=30,
         choices=STATUS_CHOICES,
         default='pending'
     )
-    execution_time = models.IntegerField(_("زمان اجرا (میلی‌ثانیه)"), null=True, blank=True)
-    memory_used = models.IntegerField(_("حافظه استفاده شده (کیلوبایت)"), null=True, blank=True)
-    score = models.FloatField(_("امتیاز"), default=0)
+    # execution_time = models.IntegerField(_("زمان اجرا (میلی‌ثانیه)"), null=True, blank=True)
+    # memory_used = models.IntegerField(_("حافظه استفاده شده (کیلوبایت)"), null=True, blank=True)
+    # score = models.FloatField(_("امتیاز"), default=0)
 
     # نتیجه تست‌کیس‌ها (ذخیره به صورت JSON)
-    test_results = models.JSONField(_("نتایج تست‌ها"), default=dict, blank=True)
+    # test_results = models.JSONField(_("نتایج تست‌ها"), default=dict, blank=True)
 
     class Meta:
         db_table = "challenge_submission"

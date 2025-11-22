@@ -16,6 +16,7 @@ class ListChallengeSerializer(serializers.ModelSerializer):
             "language",
             "level",
             "success_percent",
+            "successful_submissions",
             "points",
             "coins",
             "image_url",
@@ -43,11 +44,11 @@ class DetailChallengeSerializer(ListChallengeSerializer):
     class Meta(ListChallengeSerializer.Meta):
         fields = ListChallengeSerializer.Meta.fields + (
             "description",
-            "time_limit",
-            "memory_limit",
-            "total_submissions",
-            "successful_submissions",
-            "avg_completion_time",
+            # "time_limit",
+            # "memory_limit",
+            # "total_submissions",
+            # "successful_submissions",
+            # "avg_completion_time",
             # 'test_cases'
         )
 
@@ -57,10 +58,12 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
         model = ChallengeSubmission
         fields = (
             "id",
-            'code'
+            'status'
         )
 
     def create(self, validated_data):
+        import ipdb
+        ipdb.set_trace()
         user_id = self.context["request"].user.id
         challenge_id = self.context["challenge_id"]
 
@@ -70,5 +73,6 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
 
         return ChallengeSubmission.objects.create(
             user_id=user_id,
-            challenge_id=challenge_id
+            challenge_id=challenge_id,
+            **validated_data
         )
