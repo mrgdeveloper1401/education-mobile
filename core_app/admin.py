@@ -8,6 +8,7 @@ from .models import Photo, Video, Attachment
 class PhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'file_size', 'file_format', 'width', 'height', 'is_active')
     list_filter = ('is_active',)
+    raw_id_fields = ("upload_by",)
     readonly_fields = ('file_size', 'file_format', 'width', 'height')
 
 

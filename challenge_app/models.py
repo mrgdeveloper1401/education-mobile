@@ -21,7 +21,7 @@ class Challenge(CreateMixin, UpdateMixin, ActiveMixin):
     LANGUAGE_CHOICES = (
     ("PY", _("Python")),
     ("JA", "Java"),
-    ("HTML", _("HTML")),
+    # ("HTML", _("HTML")),
     ("C#", _("C#")),
     ("JS", _("JavaScript")),
     ("C++", _("C++")),
@@ -112,7 +112,7 @@ class ChallengeSubmission(CreateMixin, UpdateMixin, ActiveMixin):
         related_name='submissions',
         verbose_name=_("چالش")
     )
-    code = models.TextField(_("کد ارسالی"))
+    code = models.FileField(_("کد ارسالی"))
     language = models.CharField(_("زبان برنامه‌نویسی"), max_length=50)
     status = models.CharField(
         _("وضعیت"),

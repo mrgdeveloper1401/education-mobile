@@ -51,9 +51,16 @@ class Gateway:
 
 async def main():
     g1 = Gateway()
-    result = await g1.request_payment(50000, "hello world", "123", "09391640664")
-    print(result)
-
+    result1 = await g1.request_payment(50000, "hello world", "123", "09391640664")
+    # result2 = await g1.request_payment(50000, "hello world", "123", "09391640664")
+    # result3 = await g1.request_payment(50000, "hello world", "123", "09391640664")
+    # result4 = await g1.request_payment(50000, "hello world", "123", "09391640664")
+    # result5 = await g1.request_payment(50000, "hello world", "123", "09391640664")
+    print(result1)
+    # print(result2)
+    # print(result3)
+    # print(result4)
+    # print(result5)
 
 if __name__ == "__main__":
     asyncio.run(main())
