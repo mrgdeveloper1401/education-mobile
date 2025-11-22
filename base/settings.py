@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     "exam_app",
     "subscription_app",
     "challenge_app",
-    "gateway_app"
+    "gateway_app",
+    "discount_app"
 ]
 
 MIDDLEWARE = [
