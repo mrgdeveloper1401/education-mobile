@@ -1,10 +1,16 @@
+import time
+from datetime import timedelta
+from uuid import uuid4
+
 from adrf.views import APIView
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import NotFound
 
 from base.clasess.gateway import Gateway
+from discount_app.models import Coupon
 from gateway_app.models import Gateway as GatewayModel
-from subscription_app.models import SubscriptionPlan
+from subscription_app.models import SubscriptionPlan, UserSubscription
 from .serializer import GatewaySerializer
 from ...utils.custom_permissions import AsyncIsAuthenticated
 from ...utils.custom_response import response
@@ -14,24 +20,42 @@ class GatewayView(APIView):
     serializer_class = GatewaySerializer
     permission_classes = (AsyncIsAuthenticated,)
 
-    async def _create_gateway_record(self, user_id, plan_id, result):
+    async def _create_gateway_record(self, user_id, plan_id, result, is_complete: bool = False):
         await GatewayModel.objects.acreate(
             user_id=user_id,
             subscription_id=plan_id,
             track_id=result['trackId'],
             message_gateway=result['message'],
             result_gateway=result['result'],
+            is_complete=is_complete
         )
 
     async def check_plan(self, plan_id):
-        obj = await SubscriptionPlan.objects.filter(id=plan_id, is_active=True).only("id", "discounted_price").alast()
+        obj = await SubscriptionPlan.objects.filter(
+            id=plan_id,
+            is_active=True
+        ).only(
+            "id",
+            "discounted_price",
+            "duration"
+        ).alast()
         if not obj:
             raise NotFound("plan not found")
         return obj
 
+    async def calc_price_by_coupon(self, price_plan, coupon):
+        price = price_plan
+        coupon.amount = int(coupon.amount)
+
+        if coupon.coupon_type == "amount":
+            price -= coupon.amount
+        else:
+            calc_discount = price *  coupon.amount / 100
+            price -= calc_discount
+
+        return min(price, 0)
+
     async def post(self, request):
-        # import ipdb
-        # ipdb.set_trace()
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -51,6 +75,38 @@ class GatewayView(APIView):
 
         # get price
         price = plan.discounted_price
+
+        # check coupon
+        if coupon_code:
+            coupon = await Coupon.objects.filter(code=coupon_code, is_active=True).alast()
+            if not coupon.is_valid():
+                raise NotFound("coupon not found")
+            else:
+                price = await self.calc_price_by_coupon(price, coupon)
+
+        # check price is zero
+        if price == 0:
+            result = {
+                "trackId": None,
+                "message": "پرداخت با موفقیت انجام شد",
+                "result": 100
+            }
+            await self._create_gateway_record(user_id, plan.id, result, is_complete=True)
+            await UserSubscription.objects.acreate(
+                user_id=user_id,
+                plan_id=plan.id,
+                start_date=timezone.now(),
+                end_date=timezone.now() + timedelta(days=plan.duration),
+                transaction_id=f'{int(time.time())}_{uuid4().time}',
+                status="active"
+            )
+            return response(
+                status_code=201,
+                error=False,
+                message="پردازش با موفقیت انجام شد",
+                data=result,
+                status=True
+            )
 
         # request gateway
         gate_way = Gateway()
