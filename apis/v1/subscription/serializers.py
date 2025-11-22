@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from subscription_app.models import SubscriptionPlan, InstallmentPlan
+from subscription_app.models import SubscriptionPlan, InstallmentPlan, UserSubscription
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -26,4 +26,19 @@ class InstallmentPlanSerializer(serializers.ModelSerializer):
             "is_active",
             "created_at",
             "updated_at",
+        )
+
+
+class UserSubscriptionSerializer(serializers.ModelSerializer):
+    plan_name = serializers.CharField(source="plan.name", read_only=True)
+
+    class Meta:
+        model = UserSubscription
+        fields = (
+            "id",
+            "plan_name",
+            "start_date",
+            "end_date",
+            "status",
+            "transaction_id"
         )
