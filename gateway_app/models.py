@@ -18,7 +18,7 @@ class Gateway(CreateMixin, UpdateMixin, ActiveMixin):
     is_complete = models.BooleanField(default=False)
     result_gateway = models.PositiveSmallIntegerField(blank=True, null=True)
     message_gateway = models.CharField(max_length=255, blank=True, null=True)
-    track_id = models.PositiveIntegerField(blank=True, null=True)
+    track_id = models.CharField(max_length=20, blank=True, null=True)
 
     class Meta:
         db_table = "gateway"

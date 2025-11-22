@@ -5,7 +5,8 @@ import httpx
 
 
 ZIBAL_API_KEY = config("ZIBAL_API_KEY", cast=str, default="")
-ZIBAL_CALLBACK_URL = config("ZIBAL_REDIRECT_URL", cast=str, default="")
+ZIBAL_CALLBACK_URL = config("ZIBAL_CALLBACK_URL", cast=str, default="")
+ZIBAL_REQUEST_URL = config("ZIBAL_REQUEST_URL", cast=str, default="")
 ZIBAL_LAZY_REQUEST_URL = config("ZIBAL_LAZY_REQUEST_URL", cast=str, default="")
 
 
@@ -13,7 +14,7 @@ class Gateway:
     def __init__(self):
         self.__merchant = ZIBAL_API_KEY
         self.__callback_url = ZIBAL_CALLBACK_URL
-        self.__reqeust_payment_url = ZIBAL_LAZY_REQUEST_URL
+        self.__reqeust_payment_url = ZIBAL_REQUEST_URL
         self.headers = {
             "Content-Type": "application/json",
         }
