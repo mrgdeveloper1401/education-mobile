@@ -3,6 +3,7 @@ import time
 import random
 
 from django.contrib.auth import aauthenticate, authenticate
+from django.db.models import Prefetch
 from pytz import timezone as pytz_timezone
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
@@ -17,6 +18,7 @@ from base.clasess.send_sms import SendSms
 from base.utils.custom_throttle import OtpRateThrottle
 from base.utils.grand_section_access import grant_mobile_sections_access
 from core_app.models import Photo
+from subscription_app.models import UserSubscription
 from .serializers import (
     RequestOtpSerializer,
     OtpVerifySerializer,
@@ -144,7 +146,16 @@ class UserProfileView(
         "bio",
         'image__width',
         "image__height"
-    ).select_related("image")
+    ).select_related("image").prefetch_related(
+        Prefetch(
+            "subscriptions", queryset=UserSubscription.objects.select_related("plan").only(
+                "plan__name",
+                "start_date",
+                "end_date",
+                "user_id"
+            )
+        )
+    )
 
     def get_queryset(self):
         queryset = self.queryset.filter(id=self.request.user.id)

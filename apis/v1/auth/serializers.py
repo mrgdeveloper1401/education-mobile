@@ -1,4 +1,5 @@
 from adrf.serializers import Serializer as AdrfSerializer, ModelSerializer as AdrfModelSerializer
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
@@ -6,6 +7,7 @@ from rest_framework.exceptions import NotFound
 from auth_app.models import User
 from core_app.models import Photo
 from auth_app.validators import MobileRegexValidator
+from subscription_app.models import UserSubscription
 
 
 class RequestOtpSerializer(AdrfSerializer):
@@ -17,8 +19,49 @@ class OtpVerifySerializer(AdrfSerializer):
     otp = serializers.CharField()
 
 
+class UserPlanSerializer(serializers.ModelSerializer):
+    plan_name = serializers.CharField(source="plan.name", read_only=True)
+    time_remaining = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserSubscription
+        fields = (
+            "id",
+            "plan_name",
+            "time_remaining"
+        )
+
+    @extend_schema_field(serializers.DictField())
+    def get_time_remaining(self, obj):
+        now = timezone.now()
+        if obj.end_date <= now:
+            return {
+                "days": 0,
+                "hours": 0,
+                "minutes": 0,
+                "total_seconds": 0
+            }
+
+        remaining = obj.end_date - now
+        total_seconds = int(remaining.total_seconds())
+
+        days = remaining.days
+        hours = (total_seconds // 3600) % 24
+        minutes = (total_seconds // 60) % 60
+        seconds = total_seconds % 60
+
+        return {
+            "days": days,
+            "hours": hours,
+            "minutes": minutes,
+            "seconds": seconds,
+            "total_seconds": total_seconds
+        }
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     ser_image_url = serializers.SerializerMethodField()
+    subscriptions = UserPlanSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
@@ -29,6 +72,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "image",
             "ser_image_url",
             "bio",
+            "subscriptions"
         )
 
     @extend_schema_field(serializers.URLField())

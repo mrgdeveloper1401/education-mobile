@@ -57,6 +57,7 @@ class GatewayView(APIView):
         return min(price, 0)
 
     async def check_active_plan(self, plan, user_id):
+        """check user dose have active plan"""
         user_plan = await UserSubscription.objects.filter(
             is_active=True,
             user_id=user_id,
