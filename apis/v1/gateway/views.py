@@ -69,7 +69,7 @@ class GatewayView(APIView):
 
     async def _create_user_plan(self, user_id, plan_id, duration, transaction_id):
         start_date = timezone.now()
-        end_date = timezone.now() + timedelta(days=duration)
+        end_date = timezone.now() + timedelta(days=duration * 30)
         await UserSubscription.objects.acreate(
             user_id=user_id,
             plan_id=plan_id,
