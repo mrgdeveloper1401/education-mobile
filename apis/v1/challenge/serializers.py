@@ -88,6 +88,8 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
                 status_choice = "runtime_error"
             case "compilation_error":
                 status_choice = "compilation_error"
+            case "solved":
+                status_choice = "solved"
             case _:
                 raise NotAcceptable()
 

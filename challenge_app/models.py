@@ -98,6 +98,7 @@ class ChallengeSubmission(CreateMixin, UpdateMixin, ActiveMixin):
         ('memory_limit_exceeded', _("محدودیت حافظه")),
         ('runtime_error', _("خطای زمان اجرا")),
         ('compilation_error', _("خطای کامپایل")),
+        ("solved", _("حل شده"))
     )
 
     user = models.ForeignKey(
