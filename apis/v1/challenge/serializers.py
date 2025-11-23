@@ -1,8 +1,10 @@
+from django.db.models import Sum, F
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, NotAcceptable
 
-from challenge_app.models import Challenge, ChallengeSubmission
+from apis.utils.custom_exceptions import ChallengeBlockedException, ChallengeBlockTwoException
+from challenge_app.models import Challenge, ChallengeSubmission, UserChallengeScore
 
 
 class ListChallengeSerializer(serializers.ModelSerializer):
@@ -61,43 +63,51 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             'status'
         )
 
+    def _create_user_submit(self, user_id, challenge_id):
+        ChallengeSubmission.objects.create(
+            challenge_id=challenge_id,
+            is_active=True,
+            user_id=user_id
+        )
+
     def create(self, validated_data):
         user_id = self.context["request"].user.id
         challenge_id = self.context["challenge_id"]
+        status = validated_data.get("status")
 
-        check_obj = Challenge.objects.filter(id=challenge_id, is_active=True).only("id")
-        if not check_obj.exists():
+        # check challenge
+        challenge = Challenge.objects.filter(id=challenge_id, is_active=True).only("id", "points")
+        if not challenge.exists():
             raise NotFound("چالش مورد نظر پیدا نشد")
 
-        status_req_data = validated_data.get("status")
-        score = 0
+        # check user score
+        user_score = UserChallengeScore.objects.filter(user_id=user_id).only("id", "total_score")
 
-        match status_req_data:
-            case "pending":
-                status_choice = "pending"
-            case "accepted":
-                status_choice = "accepted"
-                score = check_obj.first().score
-            case "running":
-                status_choice = "running"
-            case "wrong_answer":
-                status_choice = "wrong_answer"
-            case "time_limit_exceeded":
-                status_choice = "time_limit_exceeded"
-            case "memory_limit_exceeded":
-                status_choice = "memory_limit_exceeded"
-            case "runtime_error":
-                status_choice = "runtime_error"
-            case "compilation_error":
-                status_choice = "compilation_error"
-            case "solved":
-                status_choice = "solved"
-            case _:
-                raise NotAcceptable()
-
-        return ChallengeSubmission.objects.create(
-            user_id=user_id,
+        # check user_submit and create
+        user_submit = ChallengeSubmission.objects.filter(
             challenge_id=challenge_id,
-            status=status_choice,
-            score=score
-        )
+            is_active=True,
+            user_id=user_id,
+        ).only("status")
+        self._create_user_submit(user_id, challenge_id)
+
+        if status == "solved":
+            if user_score.first().total_score <= 0:
+                raise ChallengeBlockedException()
+            elif user_score.first().total_score < 20:
+                raise ChallengeBlockTwoException()
+            else:
+                user_score.update(total_score=F("total_score") - 20)
+                return user_submit
+        elif status == "accepted":
+            get_points = challenge.first().points
+            user_score.update(total_score=F("total_score") + get_points)
+            get_user_submit = user_submit.last()
+            get_user_submit.status = "accepted"
+            get_user_submit.save()
+            return user_submit
+        else:
+            get_user_submit = user_submit.last()
+            get_user_submit.status = status
+            get_user_submit.save()
+            return user_submit

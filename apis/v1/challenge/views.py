@@ -21,7 +21,7 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        base_query = Challenge.objects.filter(is_active=True).select_related("image")
+        base_query = Challenge.objects.filter(is_active=True, status='published').select_related("image")
         base_fields = ("name", "level", "success_percent", "successful_submissions", "points", "coins", "language", "image__image", "image__width", "image__height",)
         detail_field = base_fields + ("description", )
         # test_cases_fields = ("input_data", "expected_output", "order", "challenge_id")

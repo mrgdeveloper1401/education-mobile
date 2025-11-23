@@ -175,3 +175,18 @@ class UserChallengeProgress(CreateMixin, UpdateMixin, ActiveMixin):
         #     models.Index(fields=['user', 'is_completed']),
         # ]
 
+
+class UserChallengeScore(CreateMixin, UpdateMixin, ActiveMixin):
+    """مدل برای مدیریت امتیاز کاربر"""
+    user = models.OneToOneField(
+        'auth_app.User',
+        on_delete=models.CASCADE,
+        related_name='score_profile',
+        verbose_name=_("کاربر")
+    )
+    total_score = models.FloatField(_("مجموع امتیاز"), default=0)
+
+    class Meta:
+        db_table = "user_score"
+        verbose_name = _("امتیاز کاربر")
+        verbose_name_plural = _("امتیازهای کاربران")

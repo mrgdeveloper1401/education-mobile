@@ -60,3 +60,15 @@ class CartNotFound(APIException):
     status_code = HTTP_404_NOT_FOUND
     default_detail = "کارت قابل دسترسی نمی‌باشد"
     default_code = "cart_not_found"
+
+
+class ChallengeBlockedException(APIException):
+    status_code = 403
+    default_detail = "مجموع نمرات شما صفر هست نمیتوانید جواب رو ببیند"
+    default_code = "challenge_blocked"
+
+
+class ChallengeBlockTwoException(APIException):
+    status_code = 403
+    default_detail = "مجموع نمرات شما کم تر ۲۰ هست"
+    default_code = "challenge_block_2"

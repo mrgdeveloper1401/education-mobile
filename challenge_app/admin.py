@@ -4,7 +4,7 @@ from django.utils.html import format_html
 from django.db.models import JSONField
 from django_json_widget.widgets import JSONEditorWidget
 
-from .models import Challenge, ChallengeSubmission, UserChallengeProgress
+from .models import Challenge, ChallengeSubmission, UserChallengeProgress, UserChallengeScore
 
 
 # class TestCaseInline(admin.TabularInline):
@@ -215,6 +215,7 @@ class ChallengeAdmin(admin.ModelAdmin):
 
 @admin.register(ChallengeSubmission)
 class ChallengeSubmissionAdmin(admin.ModelAdmin):
+    ordering = ("-id",)
     list_display = (
         'id',
         'get_user_mobile',
@@ -248,6 +249,7 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
         'get_status_color'
     )
     raw_id_fields = ("user", "challenge")
+    list_per_page = 20
 
     fieldsets = (
         (None, {
@@ -411,6 +413,25 @@ class UserChallengeProgressAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False  # پیشرفت کاربران به صورت خودکار ایجاد می‌شود
 
+
+@admin.register(UserChallengeScore)
+class UserChallengeScoreAdmin(admin.ModelAdmin):
+    list_display = ("id", "user_id", "get_user_phone", "total_score", "created_at", "updated_at")
+    search_fields = ("user__mobile_phone",)
+    search_help_text = _("برای جست و جو میتوانید از شماره موبایل کاربر استفاده کنید")
+    raw_id_fields = ("user",)
+    list_display_links = ("id", 'user_id', "get_user_phone")
+
+    def get_user_phone(self, obj):
+        return obj.user.mobile_phone
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("user").only(
+            "user__mobile_phone",
+            "total_score",
+            "created_at",
+            "updated_at"
+        )
 
 # اضافه کردن اکشن‌های سفارشی
 def make_published(modeladmin, request, queryset):
