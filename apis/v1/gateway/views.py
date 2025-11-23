@@ -3,6 +3,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 from adrf.views import APIView
+from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import NotFound
@@ -181,26 +182,48 @@ class VerifyPayment(APIView):
         success = query_params.get('success', None)
         status = query_params.get('status', None)
         track_id = query_params.get('trackId', None)
+        order_id = query_params.get('orderld', None)
 
         # check params
         if not success or not status or not track_id:
             raise NotFound("query params error (verify_payment, status, trackId)")
 
         # get user
-        user = await request.auser()
-        user_id = user.id
+        user_id = request.user.id
 
         # check track id
-        check_track_id = await GatewayModel.objects.filter(track_id=track_id, is_active=True, user_id=user_id).alast()
-        if not await check_track_id.aexists():
+        check_track_id = await GatewayModel.objects.filter(
+            track_id=track_id,
+            is_active=True,
+            user_id=user_id).alast()
+        if not check_track_id:
             raise NotFound("track id not found")
 
-        # check request into gateway
+        # check plan
+        user_plan = await sync_to_async(lambda: UserSubscription.objects.filter(
+            is_active=True,
+            user_id=user_id,
+            status="reserve",
+            id=order_id
+        ).only("status"))()
+        if not await user_plan.aexists():
+            raise NotFound("user plan not found")
+        else:
+            # update status
+            await user_plan.aupdate(status="active")
 
-        return response(
-            status_code=200,
-            status=True,
-            error=False,
-            data={},
-            message=_("پردازش با موفقیت انجام شد")
-        )
+            # data
+            data = {
+                "trackId": track_id,
+                "success": success,
+                "plan_id": user_plan.id,
+                "plan_status": user_plan.status,
+            }
+
+            return response(
+                status_code=200,
+                status=True,
+                error=False,
+                data=data,
+                message=_("پردازش با موفقیت انجام شد")
+            )
