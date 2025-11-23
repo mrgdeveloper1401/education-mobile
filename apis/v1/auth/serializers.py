@@ -62,6 +62,7 @@ class UserPlanSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     ser_image_url = serializers.SerializerMethodField()
     subscriptions = UserPlanSerializer(many=True, read_only=True)
+    total_challenge_score = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -72,12 +73,17 @@ class ProfileSerializer(serializers.ModelSerializer):
             "image",
             "ser_image_url",
             "bio",
-            "subscriptions"
+            "subscriptions",
+            "total_challenge_score"
         )
 
     @extend_schema_field(serializers.URLField())
     def get_ser_image_url(self, obj):
         return obj.image.get_image_url if obj.image else None
+
+    @extend_schema_field(serializers.FloatField())
+    def get_total_challenge_score(self, obj):
+        return obj.total_challenge_score
 
     def validate_image(self, data):
         user_id = self.context['request'].user.id

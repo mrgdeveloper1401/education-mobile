@@ -222,7 +222,7 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
         # 'language',
         'status',
         # 'execution_time',
-        # 'score',
+        'score',
         'created_at'
     )
     list_display_links = ("get_user_mobile", "id", "get_challenge_name")
@@ -238,8 +238,8 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
     )
     search_help_text = _("برای جست و جو میتوانید از شماره موبایل کاربر یا نام چالش استفاده کنید")
     readonly_fields = (
-        'user',
-        'challenge',
+        # 'user',
+        # 'challenge',
         # 'code',
         # 'language',
         # 'test_results',
@@ -263,7 +263,7 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
                 'get_status_color',
                 # 'execution_time',
                 # 'memory_used',
-                # 'score'
+                'score'
             )
         }),
         # (_("نتایج تست‌ها"), {
@@ -296,7 +296,7 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
             "is_active",
             # "execution_time",
             # "memory_used",
-            # "score",
+            "score",
         )
 
     def get_status_color(self, obj):
@@ -321,11 +321,11 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
     # def has_add_permission(self, request):
     #     return False  # کاربران نمی‌توانند از طریق ادمین ارسال ایجاد کنند
 
-    def save_model(self, request, obj, form, change):
-        # اگر وضعیت تغییر کرد، آمار چالش را بروزرسانی کن
-        if change and 'status' in form.changed_data:
-            obj.challenge.update_statistics()
-        super().save_model(request, obj, form, change)
+    # def save_model(self, request, obj, form, change):
+    #     # اگر وضعیت تغییر کرد، آمار چالش را بروزرسانی کن
+    #     if change and 'status' in form.changed_data:
+    #         obj.challenge.update_statistics()
+    #     super().save_model(request, obj, form, change)
 
     def get_user_mobile(self, obj):
         return obj.user.mobile_phone

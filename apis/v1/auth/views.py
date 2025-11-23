@@ -3,7 +3,8 @@ import time
 import random
 
 from django.contrib.auth import authenticate
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Sum, Q
+from django.db.models.functions import Coalesce
 from pytz import timezone as pytz_timezone
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
@@ -159,7 +160,18 @@ class UserProfileView(
     )
 
     def get_queryset(self):
-        queryset = self.queryset.filter(id=self.request.user.id)
+        queryset = self.queryset.filter(id=self.request.user.id).annotate(
+            total_challenge_score=Coalesce(
+                Sum(
+                    "challenge_submissions__score",
+                    filter=Q(
+                        challenge_submissions__is_active=True,
+                        challenge_submissions__status="accepted"
+                    )
+                ),
+                0.0
+            )
+        )
         return queryset
 
 

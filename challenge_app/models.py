@@ -123,7 +123,7 @@ class ChallengeSubmission(CreateMixin, UpdateMixin, ActiveMixin):
     )
     # execution_time = models.IntegerField(_("زمان اجرا (میلی‌ثانیه)"), null=True, blank=True)
     # memory_used = models.IntegerField(_("حافظه استفاده شده (کیلوبایت)"), null=True, blank=True)
-    # score = models.FloatField(_("امتیاز"), default=0)
+    score = models.FloatField(_("امتیاز"), default=0)
 
     # نتیجه تست‌کیس‌ها (ذخیره به صورت JSON)
     # test_results = models.JSONField(_("نتایج تست‌ها"), default=dict, blank=True)
