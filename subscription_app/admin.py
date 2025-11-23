@@ -142,6 +142,7 @@ class SubscriptionPlanAdmin(admin.ModelAdmin):
 @admin.register(UserSubscription)
 class UserSubscriptionAdmin(admin.ModelAdmin):
     raw_id_fields = ("user", "plan")
+    ordering = ("-id",)
     inlines = (UserInstallmentInline,)
     list_display_links = ("id", "user__mobile_phone", "start_date", "end_date")
     search_help_text = _("برای حست و جو میتوانید از شماره موبایل کاربر استفاده کنید")
