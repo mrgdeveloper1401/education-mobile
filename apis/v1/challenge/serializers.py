@@ -24,7 +24,7 @@ class ListChallengeSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.URLField())
     def get_image_url(self, obj):
-        return obj.image.course_image
+        return obj.image.course_image if obj.image else None
 
 
 # class TestCateChallengeSerializer(serializers.ModelSerializer):

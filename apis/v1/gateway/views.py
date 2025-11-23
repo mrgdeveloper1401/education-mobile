@@ -6,14 +6,15 @@ from adrf.views import APIView
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, NotAcceptable
 
 from base.clasess.gateway import Gateway
 from discount_app.models import Coupon
 from gateway_app.models import Gateway as GatewayModel
 from subscription_app.models import SubscriptionPlan, UserSubscription
 from .serializer import GatewaySerializer
-from ...utils.custom_exceptions import PlanAlreadyExistsException
+from ...utils.custom_exceptions import PlanAlreadyExistsException, TooManyRequests, PaymentTooManyRequests, \
+    AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound
 from ...utils.custom_permissions import AsyncIsAuthenticated
 from ...utils.custom_response import response
 
@@ -208,22 +209,81 @@ class VerifyPayment(APIView):
         ).only("status"))()
         if not await user_plan.aexists():
             raise NotFound("user plan not found")
-        else:
-            # update status
-            await user_plan.aupdate(status="active")
 
-            # data
-            data = {
-                "trackId": track_id,
-                "success": success,
-                "plan_id": user_plan.id,
-                "plan_status": user_plan.status,
-            }
+        # verify payment on zibal gateway
+        gateway = Gateway()
+        verify_payment = await gateway.verify_payment(check_track_id)
 
-            return response(
-                status_code=200,
-                status=True,
-                error=False,
-                data=data,
-                message=_("پردازش با موفقیت انجام شد")
-            )
+        # check verify payment
+        status_verify_payment = verify_payment.get('status', None)
+        # result_verify_payment = verify_payment.get('result', None)
+
+        match status_verify_payment:
+            case 1:
+                    # update status
+                    await user_plan.aupdate(status="active")
+                    await check_track_id.asave(is_complete=True)
+
+                    # data
+                    data = {
+                        "trackId": track_id,
+                        "success": success,
+                        "plan_id": user_plan.id,
+                        "plan_status": user_plan.status,
+                    }
+                    return response(
+                        status_code=200,
+                        status=True,
+                        error=False,
+                        data=data,
+                        message=_("پردازش با موفقیت انجام شد")
+                    )
+
+            case -1:
+                await user_plan.aupdate(status="reserve")
+                return response(
+                    status_code=204,
+                    status=True,
+                    error=False,
+                    data={},
+                    message="در حال انجام پردازش"
+                )
+
+            case -2:
+                return response(
+                    status_code=400,
+                    status=False,
+                    error=True,
+                    data=None,
+                    message="درگاه پرداخت به مشکل خورده هست"
+                )
+
+            case 3:
+                return response(
+                    status_code=400,
+                    status=False,
+                    error=True,
+                    data=None,
+                    message="عملیات توسط کاربر لغو شده هست"
+                )
+
+            case 7:
+                raise TooManyRequests()
+
+            case 8:
+                raise PaymentTooManyRequests()
+
+            case 9:
+                raise AmountTooManyRequests()
+
+            case 10:
+                raise CartdIsInvalid()
+
+            case 11:
+                raise SwitchError()
+
+            case 12:
+                raise CartNotFound()
+
+            case _:
+                raise NotAcceptable()

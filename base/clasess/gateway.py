@@ -8,6 +8,7 @@ ZIBAL_API_KEY = config("ZIBAL_API_KEY", cast=str, default="")
 ZIBAL_CALLBACK_URL = config("ZIBAL_CALLBACK_URL", cast=str, default="")
 ZIBAL_REQUEST_URL = config("ZIBAL_REQUEST_URL", cast=str, default="")
 ZIBAL_LAZY_REQUEST_URL = config("ZIBAL_LAZY_REQUEST_URL", cast=str, default="")
+ZIBAL_VERIFY_URL = config("ZIBAL_VERIFY_URL", cast=str)
 
 
 class Gateway:
@@ -15,17 +16,18 @@ class Gateway:
         self.__merchant = ZIBAL_API_KEY
         self.__callback_url = ZIBAL_CALLBACK_URL
         self.__reqeust_payment_url = ZIBAL_REQUEST_URL
+        self.__verify_payment_url = ZIBAL_VERIFY_URL
         self.headers = {
             "Content-Type": "application/json",
         }
 
-    async def _post(self, body, headers=None):
+    async def _post(self, body, url, headers=None):
         if headers:
             self.headers.update(headers)
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                url=self.__reqeust_payment_url,
+                url=url,
                 headers=headers,
                 json=body,
             )
@@ -46,7 +48,17 @@ class Gateway:
             "orderId": order_id,
             "mobile": mobile
             }
-        result = await self._post(data)
+        url = self.__reqeust_payment_url
+        result = await self._post(data, url)
+        return result
+
+    async def verify_payment(self, track_id: int):
+        data = {
+            "merchant": self.__merchant,
+            "trackId": track_id,
+        }
+        url = self.__verify_payment_url
+        result = await self._post(data, url)
         return result
 
 
