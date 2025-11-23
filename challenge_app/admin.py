@@ -146,11 +146,11 @@ class ChallengeAdmin(admin.ModelAdmin):
 
     get_completion_rate.short_description = _("نرخ موفقیت")
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = list(super().get_readonly_fields(request, obj))
-        if obj:  # برای ویرایش موجود
-            readonly_fields.extend(['language'])  # جلوگیری از تغییر زبان پس از ایجاد
-        return readonly_fields
+    # def get_readonly_fields(self, request, obj=None):
+    #     readonly_fields = list(super().get_readonly_fields(request, obj))
+    #     if obj:  # برای ویرایش موجود
+    #         readonly_fields.extend(['language'])  # جلوگیری از تغییر زبان پس از ایجاد
+    #     return readonly_fields
 
 
 @admin.register(TestCase)
