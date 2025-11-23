@@ -67,6 +67,18 @@ class GatewayView(APIView):
         if user_plan and user_plan.status == "active":
             raise PlanAlreadyExistsException()
 
+    async def _create_user_plan(self, user_id, plan_id, duration, transaction_id):
+        start_date = timezone.now()
+        end_date = timezone.now() + timedelta(days=duration)
+        await UserSubscription.objects.acreate(
+            user_id=user_id,
+            plan_id=plan_id,
+            start_date=start_date,
+            end_date=end_date,
+            status="reserve",
+            transaction_id=transaction_id
+        )
+
     async def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -134,6 +146,10 @@ class GatewayView(APIView):
 
         # create gateway record
         await self._create_gateway_record(user_id, plan.id, result)
+
+        # create user plan
+        transaction_id = f'{int(time.time())}_{uuid4().time}'
+        await self._create_user_plan(user_id, plan.id, plan.duration, transaction_id)
 
         # check result and return response
         if result['result'] == 100:
