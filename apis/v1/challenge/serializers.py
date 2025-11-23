@@ -70,12 +70,14 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             raise NotFound("چالش مورد نظر پیدا نشد")
 
         status_req_data = validated_data.get("status")
+        score = 0
 
         match status_req_data:
             case "pending":
                 status_choice = "pending"
             case "accepted":
                 status_choice = "accepted"
+                score = check_obj.first().score
             case "running":
                 status_choice = "running"
             case "wrong_answer":
@@ -96,5 +98,6 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
         return ChallengeSubmission.objects.create(
             user_id=user_id,
             challenge_id=challenge_id,
-            status=status_choice
+            status=status_choice,
+            score=score
         )
