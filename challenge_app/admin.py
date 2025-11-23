@@ -247,6 +247,7 @@ class ChallengeSubmissionAdmin(admin.ModelAdmin):
         'updated_at',
         'get_status_color'
     )
+    raw_id_fields = ("user", "challenge")
 
     fieldsets = (
         (None, {
