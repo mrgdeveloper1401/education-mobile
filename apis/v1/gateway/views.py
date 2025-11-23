@@ -137,6 +137,7 @@ class GatewayView(APIView):
 
         # request gateway
         gate_way = Gateway()
+        price = price * 10
         result = await gate_way.request_payment(
             amount=price,
             description=description,
