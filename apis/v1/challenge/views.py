@@ -1,10 +1,9 @@
-from django.db.models import Prefetch
 from rest_framework import viewsets, views
 from rest_framework.exceptions import NotAcceptable
 from rest_framework.permissions import IsAuthenticated
 from django.utils.translation import gettext_lazy as _
 
-from challenge_app.models import Challenge, TestCase
+from challenge_app.models import Challenge
 from .filters import ChallengeFilter
 from .serializers import ListChallengeSerializer, DetailChallengeSerializer, SubmitChallengeSerializer
 from ...utils.custom_pagination import ScrollPagination

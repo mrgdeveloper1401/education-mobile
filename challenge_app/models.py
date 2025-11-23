@@ -67,23 +67,23 @@ class Challenge(CreateMixin, UpdateMixin, ActiveMixin):
         verbose_name_plural = _("چالش‌ها")
 
 
-class TestCase(CreateMixin, UpdateMixin, ActiveMixin):
-    """تست‌کیس‌های هر چالش"""
-    challenge = models.ForeignKey(
-        Challenge,
-        on_delete=models.PROTECT,
-        related_name='test_cases',
-        verbose_name=_("چالش")
-    )
-    input_data = models.CharField(_("ورودی"), max_length=500)
-    expected_output = models.CharField(_("خروجی مورد انتظار"), max_length=500)
-    order = models.IntegerField(_("ترتیب"), default=0)
-
-    class Meta:
-        db_table = "test_case"
-        verbose_name = _("تست‌کیس")
-        verbose_name_plural = _("تست‌کیس‌ها")
-        ordering = ("id",)
+# class TestCase(CreateMixin, UpdateMixin, ActiveMixin):
+#     """تست‌کیس‌های هر چالش"""
+#     challenge = models.ForeignKey(
+#         Challenge,
+#         on_delete=models.PROTECT,
+#         related_name='test_cases',
+#         verbose_name=_("چالش")
+#     )
+#     input_data = models.CharField(_("ورودی"), max_length=500)
+#     expected_output = models.CharField(_("خروجی مورد انتظار"), max_length=500)
+#     order = models.IntegerField(_("ترتیب"), default=0)
+#
+#     class Meta:
+#         db_table = "test_case"
+#         verbose_name = _("تست‌کیس")
+#         verbose_name_plural = _("تست‌کیس‌ها")
+#         ordering = ("id",)
 
 
 class ChallengeSubmission(CreateMixin, UpdateMixin, ActiveMixin):

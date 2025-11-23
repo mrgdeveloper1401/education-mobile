@@ -4,14 +4,14 @@ from django.utils.html import format_html
 from django.db.models import JSONField
 from django_json_widget.widgets import JSONEditorWidget
 
-from .models import Challenge, TestCase, ChallengeSubmission, UserChallengeProgress
+from .models import Challenge, ChallengeSubmission, UserChallengeProgress
 
 
-class TestCaseInline(admin.TabularInline):
-    model = TestCase
-    extra = 1
-    fields = ('input_data', 'expected_output', 'order')
-    ordering = ('order',)
+# class TestCaseInline(admin.TabularInline):
+#     model = TestCase
+#     extra = 1
+#     fields = ('input_data', 'expected_output', 'order')
+#     ordering = ('order',)
 
 
 class ChallengeSubmissionInline(admin.TabularInline):
@@ -107,7 +107,7 @@ class ChallengeAdmin(admin.ModelAdmin):
         }),
     )
 
-    inlines = (TestCaseInline,)
+    # inlines = (TestCaseInline,)
     raw_id_fields = ("image",)
 
     def get_queryset(self, request):
@@ -153,64 +153,64 @@ class ChallengeAdmin(admin.ModelAdmin):
     #     return readonly_fields
 
 
-@admin.register(TestCase)
-class TestCaseAdmin(admin.ModelAdmin):
-    list_display = (
-        'challenge_id',
-        "get_challenge_name",
-        "id",
-        'get_input_preview',
-        'get_output_preview',
-        'order',
-        'created_at'
-    )
-    list_display_links = ("id", "challenge_id", "get_challenge_name")
-    list_filter = ('challenge__language', 'challenge__level')
-    search_fields = ('challenge__name',)
-    search_help_text = _("برای جست و جو میتوانید از نام چالش استفاده کنید")
-    list_editable = ('order',)
-    list_per_page = 30
-    list_max_show_all = 100
-
-    fieldsets = (
-        (None, {
-            'fields': (
-                'challenge',
-                'input_data',
-                'expected_output',
-                'order'
-            )
-        }),
-        (_("تاریخ‌ها"), {
-            'fields': (
-                'created_at',
-                'updated_at'
-            )
-        }),
-    )
-    readonly_fields = ("created_at", "updated_at")
-    raw_id_fields = ("challenge",)
-
-    def get_queryset(self, request):
-        fields = ("input_data", "expected_output", "order", "is_active", "created_at", "updated_at", "challenge__name")
-        return super().get_queryset(request).select_related('challenge').only(*fields)
-
-    def get_input_preview(self, obj):
-        if len(obj.input_data) > 50:
-            return f"{obj.input_data[:50]}..."
-        return obj.input_data
-
-    get_input_preview.short_description = _("ورودی")
-
-    def get_output_preview(self, obj):
-        if len(obj.expected_output) > 50:
-            return f"{obj.expected_output[:50]}..."
-        return obj.expected_output
-
-    get_output_preview.short_description = _("خروجی مورد انتظار")
-
-    def get_challenge_name(self, obj):
-        return obj.challenge.name
+# @admin.register(TestCase)
+# class TestCaseAdmin(admin.ModelAdmin):
+#     list_display = (
+#         'challenge_id',
+#         "get_challenge_name",
+#         "id",
+#         'get_input_preview',
+#         'get_output_preview',
+#         'order',
+#         'created_at'
+#     )
+#     list_display_links = ("id", "challenge_id", "get_challenge_name")
+#     list_filter = ('challenge__language', 'challenge__level')
+#     search_fields = ('challenge__name',)
+#     search_help_text = _("برای جست و جو میتوانید از نام چالش استفاده کنید")
+#     list_editable = ('order',)
+#     list_per_page = 30
+#     list_max_show_all = 100
+#
+#     fieldsets = (
+#         (None, {
+#             'fields': (
+#                 'challenge',
+#                 'input_data',
+#                 'expected_output',
+#                 'order'
+#             )
+#         }),
+#         (_("تاریخ‌ها"), {
+#             'fields': (
+#                 'created_at',
+#                 'updated_at'
+#             )
+#         }),
+#     )
+#     readonly_fields = ("created_at", "updated_at")
+#     raw_id_fields = ("challenge",)
+#
+#     def get_queryset(self, request):
+#         fields = ("input_data", "expected_output", "order", "is_active", "created_at", "updated_at", "challenge__name")
+#         return super().get_queryset(request).select_related('challenge').only(*fields)
+#
+#     def get_input_preview(self, obj):
+#         if len(obj.input_data) > 50:
+#             return f"{obj.input_data[:50]}..."
+#         return obj.input_data
+#
+#     get_input_preview.short_description = _("ورودی")
+#
+#     def get_output_preview(self, obj):
+#         if len(obj.expected_output) > 50:
+#             return f"{obj.expected_output[:50]}..."
+#         return obj.expected_output
+#
+#     get_output_preview.short_description = _("خروجی مورد انتظار")
+#
+#     def get_challenge_name(self, obj):
+#         return obj.challenge.name
 
 
 @admin.register(ChallengeSubmission)
