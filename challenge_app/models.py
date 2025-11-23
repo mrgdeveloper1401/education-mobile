@@ -180,7 +180,7 @@ class UserChallengeScore(CreateMixin, UpdateMixin, ActiveMixin):
     """مدل برای مدیریت امتیاز کاربر"""
     user = models.OneToOneField(
         'auth_app.User',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='score_profile',
         verbose_name=_("کاربر")
     )

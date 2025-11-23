@@ -19,6 +19,7 @@ from auth_app.models import User, Student
 from base.clasess.send_sms import SendSms
 from base.utils.custom_throttle import OtpRateThrottle
 from base.utils.grand_section_access import grant_mobile_sections_access
+from challenge_app.models import UserChallengeScore
 from core_app.models import Photo
 from subscription_app.models import UserSubscription
 from .serializers import (
@@ -156,22 +157,14 @@ class UserProfileView(
                 "end_date",
                 "user_id"
             )
+        ),
+        Prefetch(
+            "score_profile", queryset=UserChallengeScore.objects.only("user_id", "total_score")
         )
     )
 
     def get_queryset(self):
-        queryset = self.queryset.filter(id=self.request.user.id).annotate(
-            total_challenge_score=Coalesce(
-                Sum(
-                    "challenge_submissions__score",
-                    filter=Q(
-                        challenge_submissions__is_active=True,
-                        challenge_submissions__status="accepted"
-                    )
-                ),
-                0.0
-            )
-        )
+        queryset = self.queryset.filter(id=self.request.user.id)
         return queryset
 
 
