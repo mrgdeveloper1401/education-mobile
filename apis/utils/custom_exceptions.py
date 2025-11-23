@@ -13,19 +13,13 @@ class AuthenticationFailed(APIException):
     default_code = 2
 
 
-class UserNotFoundException(APIException):
-    status_code = 404
-    default_detail = "رمز عبور یا نام کاربری شما اشتباه هست"
-    default_code = 3
-
-
 class UserBlockException(APIException):
     status_code = 403
     default_detail = "حساب کاربری شما مسدود میباشد با پشتیبان تماس بگیرد"
-    default_code = 4
+    default_code = 3
 
 
 class PlanAlreadyExistsException(APIException):
     status_code = 403
     default_detail = "کاربر محترم شما از قبل اشتراک فعال دارید"
-    default_code = 5
+    default_code = 4

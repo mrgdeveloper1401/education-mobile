@@ -2,11 +2,12 @@ import datetime
 import time
 import random
 
-from django.contrib.auth import aauthenticate, authenticate
+from django.contrib.auth import authenticate
 from django.db.models import Prefetch
 from pytz import timezone as pytz_timezone
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -29,7 +30,7 @@ from .serializers import (
 from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, AsyncIsAuthenticated, NotAuthenticate
 from apis.utils.custom_response import response
 from base.settings import SIMPLE_JWT
-from ...utils.custom_exceptions import UserNotFoundException, UserBlockException
+from ...utils.custom_exceptions import UserBlockException
 
 
 class RequestOtpView(AsyncAPIView):
@@ -107,7 +108,7 @@ class OtpVerifyView(AsyncAPIView):
                     data=None
                 )
             else:
-                token = await sync_to_async((RefreshToken.for_user))(user)
+                token = await sync_to_async(lambda: RefreshToken.for_user(user))()
                 iran_timezone = pytz_timezone("Asia/Tehran")
                 expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
                 expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
@@ -200,30 +201,34 @@ class LoginByPhonePasswordView(APIView):
         phone = serializer.validated_data['mobile_phone']
         password = serializer.validated_data['password']
 
-        user = authenticate(request, mobile_phone=phone, password=password)
+        user = User.objects.filter(mobile_phone=phone).only("is_active", "password").first()
+
         if user is None:
-            raise UserNotFoundException()
+            raise NotFound("نام کاربری و رمز عبور اشتباه هست")
+        elif user.password is None:
+            raise NotFound("نام کاربری و رمز عبور اشتباه هست")
+        elif user.is_active is False:
+            raise UserBlockException()
+        elif user.check_password(password) is False:
+            raise NotFound("نام کاربری و رمز عبور اشتباه هست")
         else:
-            if user.is_active is False:
-                raise UserBlockException()
-            else:
-                token =  RefreshToken.for_user(user)
-                iran_timezone = pytz_timezone("Asia/Tehran")
-                expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
-                expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
-                data = {
-                    "mobile": phone,
-                    "access_token": str(token.access_token),
-                    "refresh_token": str(token),
-                    "jwt": "Bearer",
-                    "expire_timestamp_access_token": expire_timestamp,
-                    "expire_date_access_token": expire_date
-                }
-                grant_mobile_sections_access(user.id) # access two section into user
-                return response(
-                    status=True,
-                    message="پردازش با موفقیت انجام شد",
-                    error=False,
-                    status_code=200,
-                    data=data
-                )
+            token =  RefreshToken.for_user(user)
+            iran_timezone = pytz_timezone("Asia/Tehran")
+            expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
+            expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
+            data = {
+                "mobile": phone,
+                "access_token": str(token.access_token),
+                "refresh_token": str(token),
+                "jwt": "Bearer",
+                "expire_timestamp_access_token": expire_timestamp,
+                "expire_date_access_token": expire_date
+            }
+            grant_mobile_sections_access(user.id) # access two section into user
+            return response(
+                status=True,
+                message="پردازش با موفقیت انجام شد",
+                error=False,
+                status_code=200,
+                data=data
+            )
