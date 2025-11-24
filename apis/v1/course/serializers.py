@@ -1,7 +1,7 @@
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import get_object_or_404
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
 
@@ -192,10 +192,21 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
             "student": {'read_only': True},
         }
 
+    def validate(self, attrs):
+        question_id = self.context['question_pk']
+        exam_id = self.context['exam_pk']
+        check_question = Question.objects.filter(id=question_id, is_active=True, exam_id=exam_id).only("id", "question_type")
+        get_question_obj = check_question.first()
+        if get_question_obj.question_type != "multiple_choice":
+            raise PermissionDenied("فقط امکان ارسال سوال چهارگزینه ای رو دارید")
+        attrs["question"] = get_question_obj
+        return attrs
+
     def create(self, validated_data):
         exam_id = self.context['exam_pk']
-        question_id = self.context['question_pk']
+        # question_id = self.context['question_pk']
         user_id = self.context['request'].user.id
+        question = validated_data.pop("question")
 
         get_student = Student.objects.filter(user_id=user_id, is_active=True).only("id").first()
         get_student_exam_attempt = StudentExamAttempt.objects.filter(
@@ -206,7 +217,7 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
 
         selected_choices = validated_data.pop("selected_choices", [])
         student_answer =  StudentAnswer.objects.create(
-            question_id=question_id,
+            question_id=question.id,
             student_id=get_student.id,
             attempt_id=get_student_exam_attempt.id,
             **validated_data

@@ -239,9 +239,8 @@ class StudentAnswerViewSet(
         # if getattr(self, 'swagger_fake_view', False):
         #     return Question.objects.none()
 
-        user_id = self.request.user.id
         return StudentAnswer.objects.filter(
-            student__user_id=user_id,
+            student__user_id=self.request.user.id,
             question_id=self.kwargs["pk"],
             is_active=True,
         )
