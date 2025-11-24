@@ -66,7 +66,7 @@ class DetailChallengeSerializer(ListChallengeSerializer):
         data = super().to_representation(instance)
         is_accepted = instance.is_accepted
         if is_accepted is False:
-            data.pop("answer", None)
+            data['answer'] = None
         return data
 
 
