@@ -6,12 +6,16 @@ from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 from mptt.admin import DraggableMPTTAdmin
 
-
-
+from exam_app.models import SectionExam
 from .models import (
     Category, Course, LessonCourse, StudentEnrollment,
     Section, SectionVideo, StudentAccessSection, CategoryComment
 )
+
+
+class SectionExamInline(admin.StackedInline):
+    model = SectionExam
+    extra = 0
 
 
 @admin.register(Category)
@@ -254,7 +258,7 @@ class SectionAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at')
     raw_id_fields = ('course', 'cover_image')
-    inlines = [SectionVideoInline]
+    inlines = (SectionVideoInline, SectionExamInline)
 
     fieldsets = (
         (None, {

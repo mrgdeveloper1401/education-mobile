@@ -1,8 +1,10 @@
 from django.db.models import Exists, OuterRef
 from rest_framework import viewsets, views
 from rest_framework.exceptions import NotAcceptable
+from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from django.utils.translation import gettext_lazy as _
+from django_filters.rest_framework import DjangoFilterBackend
 
 from challenge_app.models import Challenge, ChallengeSubmission
 from .filters import ChallengeFilter
@@ -20,6 +22,8 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = ChallengeFilter
     pagination_class = ScrollPagination
     permission_classes = (IsAuthenticated,)
+    ordering_fields = ("id",)
+    filter_backends = (OrderingFilter, DjangoFilterBackend)
 
     def check_user_submission(self):
         solve_subquery = ChallengeSubmission.objects.filter(
