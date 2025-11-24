@@ -53,6 +53,7 @@ class DetailChallengeSerializer(ListChallengeSerializer):
     class Meta(ListChallengeSerializer.Meta):
         fields = ListChallengeSerializer.Meta.fields + (
             "description",
+            "answer",
             # "time_limit",
             # "memory_limit",
             # "total_submissions",
@@ -60,6 +61,13 @@ class DetailChallengeSerializer(ListChallengeSerializer):
             # "avg_completion_time",
             # 'test_cases'
         )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        is_accepted = instance.is_accepted
+        if is_accepted is False:
+            data.pop("answer", None)
+        return data
 
 
 class SubmitChallengeSerializer(serializers.ModelSerializer):

@@ -31,14 +31,14 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
         return solve_subquery
 
     def get_queryset(self):
-        base_query = Challenge.objects.filter(is_active=True, status='published').select_related("image")
+        base_query = Challenge.objects.filter(is_active=True, status='published').select_related("image").annotate(
+                is_accepted=Exists(self.check_user_submission()),
+        )
         base_fields = ("name", "level", "success_percent", "successful_submissions", "points", "coins", "language", "image__image", "image__width", "image__height",)
-        detail_field = base_fields + ("description", )
+        detail_field = base_fields + ("description", "answer")
         # test_cases_fields = ("input_data", "expected_output", "order", "challenge_id")
         if self.action == "list":
-            base_query = base_query.only(*base_fields).annotate(
-                is_accepted=Exists(self.check_user_submission()),
-            )
+            base_query = base_query.only(*base_fields)
         elif self.action == "retrieve":
             return base_query.only(*detail_field)
         #     base_query = base_query.prefetch_related(

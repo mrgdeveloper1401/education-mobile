@@ -30,6 +30,7 @@ class Challenge(CreateMixin, UpdateMixin, ActiveMixin):
     name = models.CharField(_("عنوان چالش"), max_length=100)
     # slug = models.SlugField(_("اسلاگ"), max_length=100, unique=True)
     description = models.JSONField(_("شرح چالش"))
+    answer = models.JSONField(blank=True, null=True)
     language = models.CharField(_("زبان برنامه‌نویسی"), max_length=50, choices=LANGUAGE_CHOICES)
     level = models.CharField(_("سطح"), max_length=10, choices=DIFFICULTY_LEVELS)
     status = models.CharField(_("وضعیت"), max_length=20, choices=STATUS_CHOICES, default='draft')

@@ -63,15 +63,13 @@ class ChallengeAdmin(admin.ModelAdmin):
     # prepopulated_fields = {'slug': ('name',)}
     list_per_page = 20
     list_max_show_all = 100
-    formfield_overrides = {
-        JSONField: {'widget': JSONEditorWidget},
-    }
     fieldsets = (
         (None, {
             'fields': (
                 'name',
                 # 'slug',
                 'description',
+                "answer",
                 'language',
                 'level',
                 'status'
@@ -111,7 +109,9 @@ class ChallengeAdmin(admin.ModelAdmin):
 
     # inlines = (TestCaseInline,)
     raw_id_fields = ("image",)
-
+    formfield_overrides = {
+        JSONField: {'widget': JSONEditorWidget},
+    }
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('image').only(
             "name",
@@ -129,6 +129,7 @@ class ChallengeAdmin(admin.ModelAdmin):
             "description",
             "time_limit",
             "coins",
+            "answer",
             "memory_limit",
             "avg_completion_time",
             "image__image",
