@@ -26,6 +26,7 @@ class ChallengeSubmissionInline(admin.TabularInline):
 
 @admin.register(Challenge)
 class ChallengeAdmin(admin.ModelAdmin):
+    list_display_links = ("name", "language", "level")
     list_display = (
         'name',
         'language',
@@ -33,6 +34,7 @@ class ChallengeAdmin(admin.ModelAdmin):
         'status',
         'success_percent',
         'total_submissions',
+        "successful_submissions",
         'points',
         'is_active',
         "order",

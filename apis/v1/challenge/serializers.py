@@ -92,6 +92,8 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
         self._create_user_submit(user_id, challenge_id)
 
         if status == "solved":
+            # update total_submissions challenge
+            challenge.update(total_submissions=F("total_submissions") + 1)
             if user_score.first().total_score <= 0:
                 raise ChallengeBlockedException()
             elif user_score.first().total_score < 20:
@@ -104,10 +106,15 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             user_score.update(total_score=F("total_score") + get_points)
             get_user_submit = user_submit.last()
             get_user_submit.status = "accepted"
+            get_user_submit.score = get_points
             get_user_submit.save()
+            # update successful_submissions and total_submissions challenge
+            challenge.update(successful_submissions=F("successful_submissions") + 1, total_submissions=F("total_submissions") + 1)
             return user_submit
         else:
             get_user_submit = user_submit.last()
             get_user_submit.status = status
             get_user_submit.save()
+            # update total_submissions challenge
+            challenge.update(total_submissions=F("total_submissions") + 1)
             return user_submit
