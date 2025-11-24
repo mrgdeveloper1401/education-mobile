@@ -63,11 +63,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     ser_image_url = serializers.SerializerMethodField()
     subscriptions = UserPlanSerializer(many=True, read_only=True)
     challenge_total_score = serializers.SerializerMethodField()
-
     class Meta:
         model = User
         fields = (
             "id",
+            "mobile_phone",
             "first_name",
             "last_name",
             "image",
@@ -76,6 +76,9 @@ class ProfileSerializer(serializers.ModelSerializer):
             "subscriptions",
             "challenge_total_score"
         )
+        extra_kwargs = {
+            "mobile_phone": {"read_only": True},
+        }
 
     @extend_schema_field(serializers.URLField())
     def get_ser_image_url(self, obj):
