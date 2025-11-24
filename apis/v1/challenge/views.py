@@ -1,9 +1,10 @@
+from django.db.models import Exists, OuterRef
 from rest_framework import viewsets, views
 from rest_framework.exceptions import NotAcceptable
 from rest_framework.permissions import IsAuthenticated
 from django.utils.translation import gettext_lazy as _
 
-from challenge_app.models import Challenge
+from challenge_app.models import Challenge, ChallengeSubmission
 from .filters import ChallengeFilter
 from .serializers import ListChallengeSerializer, DetailChallengeSerializer, SubmitChallengeSerializer
 from ...utils.custom_pagination import ScrollPagination
@@ -20,13 +21,24 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = ScrollPagination
     permission_classes = (IsAuthenticated,)
 
+    def check_user_submission(self):
+        solve_subquery = ChallengeSubmission.objects.filter(
+            user_id=self.request.user.id,
+            challenge=OuterRef('pk'),
+            is_active=True,
+            status="accepted"
+        ).only("id")
+        return solve_subquery
+
     def get_queryset(self):
         base_query = Challenge.objects.filter(is_active=True, status='published').select_related("image")
         base_fields = ("name", "level", "success_percent", "successful_submissions", "points", "coins", "language", "image__image", "image__width", "image__height",)
         detail_field = base_fields + ("description", )
         # test_cases_fields = ("input_data", "expected_output", "order", "challenge_id")
         if self.action == "list":
-            base_query = base_query.only(*base_fields)
+            base_query = base_query.only(*base_fields).annotate(
+                is_accepted=Exists(self.check_user_submission()),
+            )
         elif self.action == "retrieve":
             return base_query.only(*detail_field)
         #     base_query = base_query.prefetch_related(

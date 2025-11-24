@@ -1,7 +1,7 @@
-from django.db.models import Sum, F
+from django.db.models import  F
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.exceptions import NotFound, NotAcceptable
+from rest_framework.exceptions import NotFound
 
 from apis.utils.custom_exceptions import ChallengeBlockedException, ChallengeBlockTwoException
 from challenge_app.models import Challenge, ChallengeSubmission, UserChallengeScore
@@ -9,6 +9,7 @@ from challenge_app.models import Challenge, ChallengeSubmission, UserChallengeSc
 
 class ListChallengeSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
+    is_accepted = serializers.SerializerMethodField()
 
     class Meta:
         model = Challenge
@@ -22,11 +23,16 @@ class ListChallengeSerializer(serializers.ModelSerializer):
             "points",
             "coins",
             "image_url",
+            "is_accepted"
         )
 
     @extend_schema_field(serializers.URLField())
     def get_image_url(self, obj):
         return obj.image.course_image if obj.image else None
+
+    @extend_schema_field(serializers.BooleanField())
+    def get_is_accepted(self, obj):
+        return obj.is_accepted
 
 
 # class TestCateChallengeSerializer(serializers.ModelSerializer):
