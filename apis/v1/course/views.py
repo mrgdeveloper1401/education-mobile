@@ -93,6 +93,14 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
+    def get_object(self):
+        obj = super().get_object()
+
+        if not obj.has_access:
+            raise PermissionDenied("شما به این بخش دسترسی ندارید")
+
+        return obj
+
     def get_queryset(self):
         # if getattr(self, 'swagger_fake_view', False):
         #     return Question.objects.none()
