@@ -72,3 +72,9 @@ class ChallengeBlockTwoException(APIException):
     status_code = 403
     default_detail = "مجموع نمرات شما کم تر ۲۰ هست"
     default_code = "challenge_block_2"
+
+
+class PreventSendSubmitChallengeException(APIException):
+    status_code = 403
+    default_detail = "شما قبلا برای این چالش جواب رو فرستادید"
+    default_code = "prevent_send_submit_challenge"

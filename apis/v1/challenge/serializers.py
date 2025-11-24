@@ -3,7 +3,8 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
-from apis.utils.custom_exceptions import ChallengeBlockedException, ChallengeBlockTwoException
+from apis.utils.custom_exceptions import ChallengeBlockedException, ChallengeBlockTwoException, \
+    PreventSendSubmitChallengeException
 from challenge_app.models import Challenge, ChallengeSubmission, UserChallengeScore
 
 
@@ -68,6 +69,16 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             "id",
             'status'
         )
+
+    def validate(self, attrs):
+        check_submit_challenge = ChallengeSubmission.objects.filter(
+            is_active=True,
+            user_id=self.context["request"].user.id,
+            challenge_id=self.context["challenge_id"],
+            status__in=['accepted', 'solved']
+        ).only("id")
+        if check_submit_challenge.exists():
+            raise PreventSendSubmitChallengeException()
 
     def _create_user_submit(self, user_id, challenge_id):
         ChallengeSubmission.objects.create(
