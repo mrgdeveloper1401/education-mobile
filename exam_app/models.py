@@ -170,6 +170,11 @@ class StudentExamAttempt(CreateMixin, UpdateMixin, ActiveMixin):
 
 
 class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
+    STATUS_CHOICES = (
+        ("accepted", _("پذیرفته شده")),
+        ("reject", _("رد شده"))
+    )
+
     student = models.ForeignKey(
         "auth_app.Student",
         on_delete=models.PROTECT,
@@ -194,6 +199,9 @@ class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
         blank=True,
         verbose_name=_("گزینه‌های انتخاب شده")
     )
+
+    # status for question code
+    status = models.CharField(max_length=10, blank=True, null=True, choices=STATUS_CHOICES)
 
     # نتیجه تصحیح
     score = models.FloatField(

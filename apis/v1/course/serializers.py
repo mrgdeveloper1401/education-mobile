@@ -185,6 +185,7 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
             "attempt",
             "question",
             "selected_choices",
+            "status"
         )
         extra_kwargs = {
             "question": {"read_only": True},
@@ -196,12 +197,16 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         question_id = self.context['question_pk']
         exam_id = self.context['exam_pk']
         user_id = self.context['request'].user.id
+        selected_choices = attrs.get('selected_choices', None)
+        status = attrs.get("status", None)
 
         # check question is code or multiple_choice
         check_question = Question.objects.filter(id=question_id, is_active=True, exam_id=exam_id).only("id", "question_type")
         get_question_obj = check_question.first()
-        if get_question_obj.question_type != "multiple_choice":
+        if get_question_obj.question_type == "multiple_choice" and not selected_choices:
             raise PermissionDenied("فقط امکان ارسال سوال چهارگزینه ای رو دارید")
+        if get_question_obj.question_type == "code" and not status:
+            raise PermissionDenied("فقط امکان ارسال سوال کد رو دارید")
 
         # check duplicate student answer
         get_attempts = StudentExamAttempt.objects.filter(student__user_id=user_id, exam_id=exam_id).only("id").last()
