@@ -1,10 +1,7 @@
-from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, PermissionDenied
-from rest_framework.generics import get_object_or_404
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
-
 
 from auth_app.models import Student
 from core_app.models import Attachment

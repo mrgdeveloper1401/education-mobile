@@ -1,9 +1,11 @@
 from django.db.models import Prefetch, Exists, OuterRef
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_view
 from rest_framework import mixins, viewsets, permissions
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
 from core_app.models import Attachment
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
@@ -25,6 +27,7 @@ from .serializers import (
 )
 from ...utils.custom_pagination import TwentyPageNumberPagination, ScrollPagination
 from ...utils.custom_permissions import IsOwnerOrReadOnly
+from ...utils.custom_response import response
 
 
 class ListDetailCategoryView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -347,3 +350,30 @@ class UploadAttachmentView(
 
     def get_queryset(self):
         return Attachment.objects.filter(upload_by_id=self.request.user.id).only("file")
+
+
+class ExamDoneView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        # import ipdb
+        # ipdb.set_trace()
+        exam_last = StudentExamAttempt.objects.filter(
+            is_active=True,
+            student__user_id=request.user.id,
+            submitted_at__isnull=True,
+            status="in_progress"
+        ).only("id").last()
+        if not exam_last:
+            raise PermissionDenied("شما ازمون فعالی رو ندارید")
+        else:
+            exam_last.status = "done"
+            exam_last.submitted_at = timezone.now()
+            exam_last.save()
+            return response(
+                error=False,
+                status_code=200,
+                data={"exam_last_id": exam_last.id},
+                message="پردازش با موفقیت انجام شد",
+                status=True
+            )

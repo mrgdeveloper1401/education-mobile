@@ -25,4 +25,5 @@ urlpatterns = [
         ),
         name='student-answer-list'
     ),
+    path("exam_done/", views.ExamDoneView.as_view(), name="exam_done"),
 ] + router.urls + lesson_course_router.urls + category_router.urls
