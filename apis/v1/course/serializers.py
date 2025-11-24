@@ -195,10 +195,26 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         question_id = self.context['question_pk']
         exam_id = self.context['exam_pk']
+        user_id = self.context['request'].user.id
+
+        # check question is code or multiple_choice
         check_question = Question.objects.filter(id=question_id, is_active=True, exam_id=exam_id).only("id", "question_type")
         get_question_obj = check_question.first()
         if get_question_obj.question_type != "multiple_choice":
             raise PermissionDenied("فقط امکان ارسال سوال چهارگزینه ای رو دارید")
+
+        # check duplicate student answer
+        get_attempts = StudentExamAttempt.objects.filter(student__user_id=user_id, exam_id=exam_id).only("id").last()
+        if not get_attempts:
+            raise NotFound("ازمون پیدا نشد")
+        student_answer = StudentAnswer.objects.filter(
+            student__user_id=user_id,
+            question_id=question_id,
+            attempt_id=get_attempts.id
+        ).only("id")
+        if student_answer:
+            raise PermissionDenied("شما قبلا جواب رو ارسال کردید نمیتوانید جواب جدیدی رو ایجاد کنید میتوانید ان را ویرایش کنید")
+
         attrs["question"] = get_question_obj
         return attrs
 
