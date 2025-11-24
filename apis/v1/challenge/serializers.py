@@ -79,6 +79,7 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
         ).only("id")
         if check_submit_challenge.exists():
             raise PreventSendSubmitChallengeException()
+        return attrs
 
     def _create_user_submit(self, user_id, challenge_id):
         ChallengeSubmission.objects.create(
@@ -135,3 +136,8 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             # update total_submissions challenge
             challenge.update(total_submissions=F("total_submissions") + 1)
             return user_submit
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['status'] = instance.values("status")[0]['status']
+        return data
