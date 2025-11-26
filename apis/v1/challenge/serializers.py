@@ -149,7 +149,6 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             return user_submit
 
     def to_representation(self, instance):
-        import ipdb; ipdb.set_trace()
         data = super().to_representation(instance)
         data['status'] = instance.values("status")[0]['status']
         # if data['status'] == "solved":
