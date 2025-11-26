@@ -141,6 +141,7 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             get_points = challenge.first().points
             user_score.update(total_score=F("total_score") + get_challenge.points)
 
+            # get user submit and save status
             get_user_submit = user_submit.last()
             get_user_submit.status = "accepted"
             get_user_submit.score = get_points
@@ -151,9 +152,11 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             return user_submit
 
         else:
+            # get user submit and save status
             get_user_submit = user_submit.last()
             get_user_submit.status = status
             get_user_submit.save()
+
             # update total_submissions challenge
             challenge.update(total_submissions=F("total_submissions") + 1)
             return user_submit
