@@ -123,6 +123,12 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
         if status == "solved":
             # update total_submissions challenge
             challenge.update(total_submissions=F("total_submissions") + 1)
+
+            # get user submit and save status
+            get_user_submit = user_submit.last()
+            get_user_submit.status = "solved"
+            get_user_submit.save()
+
             if user_score.first().total_score <= 0:
                 raise ChallengeBlockedException()
             elif user_score.first().total_score < get_challenge.points:
@@ -130,16 +136,20 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             else:
                 user_score.update(total_score=F("total_score") - get_challenge.points)
                 return user_submit
+
         elif status == "accepted":
             get_points = challenge.first().points
             user_score.update(total_score=F("total_score") + get_challenge.points)
+
             get_user_submit = user_submit.last()
             get_user_submit.status = "accepted"
             get_user_submit.score = get_points
             get_user_submit.save()
+
             # update successful_submissions and total_submissions challenge
             challenge.update(successful_submissions=F("successful_submissions") + 1, total_submissions=F("total_submissions") + 1)
             return user_submit
+
         else:
             get_user_submit = user_submit.last()
             get_user_submit.status = status
@@ -151,6 +161,6 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['status'] = instance.values("status")[0]['status']
-        # if data['status'] == "solved":
-        #     data['answer'] = instance.last().challenge.answer
+        if data['status'] == "solved":
+            data['answer'] = instance.last().challenge.answer
         return data
