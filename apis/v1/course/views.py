@@ -355,10 +355,10 @@ class UploadAttachmentView(
 class ExamDoneView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
-        # import ipdb
-        # ipdb.set_trace()
+    def post(self, request, *args, **kwargs):
+        exam_id = kwargs["exam_pk"]
         exam_last = StudentExamAttempt.objects.filter(
+            exam_id=exam_id,
             is_active=True,
             student__user_id=request.user.id,
             submitted_at__isnull=True,
