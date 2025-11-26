@@ -125,7 +125,9 @@ class Section(CreateMixin, UpdateMixin, ActiveMixin):
     cover_image = models.ForeignKey(
         "core_app.Photo",
         on_delete=models.PROTECT,
-        verbose_name=_("عکس")
+        verbose_name=_("عکس"),
+        blank=True,
+        null=True
     )
     is_last_section = models.BooleanField(
         default=False,
