@@ -128,7 +128,7 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             elif user_score.first().total_score < get_challenge.points:
                 raise ChallengeBlockTwoException()
             else:
-                user_score.update(total_score=F("total_score") - 20)
+                user_score.update(total_score=F("total_score") - get_challenge.points)
                 return user_submit
         elif status == "accepted":
             get_points = challenge.first().points
@@ -149,6 +149,9 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             return user_submit
 
     def to_representation(self, instance):
+        import ipdb; ipdb.set_trace()
         data = super().to_representation(instance)
         data['status'] = instance.values("status")[0]['status']
+        # if data['status'] == "solved":
+        #     data['answer'] = instance.last().challenge.answer
         return data
