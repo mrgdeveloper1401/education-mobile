@@ -106,6 +106,9 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
         if not challenge.exists():
             raise NotFound("چالش مورد نظر پیدا نشد")
 
+        # get challenge
+        get_challenge = challenge.last()
+
         # check user score
         user_score = UserChallengeScore.objects.filter(user_id=user_id).only("id", "total_score")
 
@@ -122,14 +125,14 @@ class SubmitChallengeSerializer(serializers.ModelSerializer):
             challenge.update(total_submissions=F("total_submissions") + 1)
             if user_score.first().total_score <= 0:
                 raise ChallengeBlockedException()
-            elif user_score.first().total_score < 20:
+            elif user_score.first().total_score < get_challenge.points:
                 raise ChallengeBlockTwoException()
             else:
                 user_score.update(total_score=F("total_score") - 20)
                 return user_submit
         elif status == "accepted":
             get_points = challenge.first().points
-            user_score.update(total_score=F("total_score") + get_points)
+            user_score.update(total_score=F("total_score") + get_challenge.points)
             get_user_submit = user_submit.last()
             get_user_submit.status = "accepted"
             get_user_submit.score = get_points
