@@ -151,7 +151,9 @@ class CreateStudentExamAttemptSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         user_id = self.context["request"].user.id
+
         get_student = Student.objects.filter(is_active=True, user_id=user_id).only("id")
+
         return StudentExamAttempt.objects.create(
             student_id=get_student.first().id,
             exam_id=validated_data["exam"].id,
@@ -159,6 +161,8 @@ class CreateStudentExamAttemptSerializer(serializers.Serializer):
 
 
 class ListDetailStudentExamAttemptSerializer(serializers.ModelSerializer):
+    passing_score = serializers.IntegerField(source="exam.passing_score", read_only=True)
+
     class Meta:
         model = StudentExamAttempt
         fields = (
@@ -168,6 +172,7 @@ class ListDetailStudentExamAttemptSerializer(serializers.ModelSerializer):
             "submitted_at",
             "total_score",
             "obtained_score",
+            "passing_score",
             "is_passed",
             "status"
         )

@@ -11,6 +11,7 @@ from core_app.models import Attachment
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, CategoryComment, \
     CommentAttachment
+from .filters import StudentExamAttemptFilter
 from .serializers import (
     CreateStudentExamAttemptSerializer,
     ListDetailStudentExamAttemptSerializer,
@@ -209,16 +210,21 @@ class StudentExamAttemptView(
     viewsets.GenericViewSet,
 ):
     """
-    شروع ازمون
+    شروع ازمون \n
+    filter query --> (in_progress, done) \n
+    filter query, is_passed --> bool (true, false) \n
+    pagination --> 20 item
     """
     serializer_class = ListDetailStudentExamAttemptSerializer
     permission_classes = (IsAuthenticated,)
+    filterset_class = StudentExamAttemptFilter
+    pagination_class = TwentyPageNumberPagination
 
     def get_queryset(self):
-        fields = self.serializer_class.Meta.fields
+        fields = ('exam__passing_score', "started_at", "total_score", "submitted_at", "obtained_score", "is_passed", "status")
         return StudentExamAttempt.objects.filter(
             student__user_id=self.request.user.id,
-        ).only(*fields)
+        ).select_related("exam").only(*fields).order_by("-id")
 
     def get_serializer_class(self):
         if self.action == "create":
