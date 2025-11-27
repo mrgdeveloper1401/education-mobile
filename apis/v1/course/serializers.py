@@ -191,7 +191,8 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
             "status",
             "score",
             "graded_at",
-            "is_correct"
+            "is_correct",
+            "created_at"
         )
         extra_kwargs = {
             "question": {"read_only": True},
@@ -292,7 +293,11 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
             student_answer.is_correct = True
             student_answer.graded_at = timezone.now()
             student_answer.score = question.score
-            student_answer.save()
+            student_answer.status = status
+        else:
+            student_answer.status = status
+            student_answer.graded_at = timezone.now()
+        student_answer.save()
 
 
 class CommentAttachmentSerializer(serializers.ModelSerializer):
