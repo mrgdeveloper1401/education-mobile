@@ -1,3 +1,4 @@
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -187,12 +188,18 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
             "attempt",
             "question",
             "selected_choices",
-            "status"
+            "status",
+            "score",
+            "graded_at",
+            "is_correct"
         )
         extra_kwargs = {
             "question": {"read_only": True},
             "attempt": {'read_only': True},
             "student": {'read_only': True},
+            "score": {"read_only": True},
+            "graded_at": {"read_only": True},
+            "is_correct": {"read_only": True},
         }
 
     def validate(self, attrs):
@@ -203,50 +210,77 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         status = attrs.get("status", None)
 
         # check question is code or multiple_choice
-        check_question = Question.objects.filter(id=question_id, is_active=True, exam_id=exam_id).only("id", "question_type")
-        get_question_obj = check_question.first()
-        if get_question_obj.question_type == "multiple_choice" and not selected_choices:
+        check_question = Question.objects.filter(
+            id=question_id, is_active=True, exam_id=exam_id
+        ).only("id", "question_type", "score").first()
+        if not check_question:
+            raise NotFound("سوال یافت شد")
+
+        if check_question.question_type == "multiple_choice" and not selected_choices:
             raise PermissionDenied("فقط امکان ارسال سوال چهارگزینه ای رو دارید")
-        if get_question_obj.question_type == "code" and not status:
+        if check_question.question_type == "code" and not status:
             raise PermissionDenied("فقط امکان ارسال سوال کد رو دارید")
 
         # check duplicate student answer
         get_attempts = StudentExamAttempt.objects.filter(student__user_id=user_id, exam_id=exam_id).only("id").last()
         if not get_attempts:
             raise NotFound("ازمون پیدا نشد")
-        student_answer = StudentAnswer.objects.filter(
+        if StudentAnswer.objects.filter(
             student__user_id=user_id,
             question_id=question_id,
             attempt_id=get_attempts.id
-        ).only("id")
-        if student_answer:
+        ).only("id").exists():
             raise PermissionDenied("شما قبلا جواب رو ارسال کردید نمیتوانید جواب جدیدی رو ایجاد کنید میتوانید ان را ویرایش کنید")
 
-        attrs["question"] = get_question_obj
+        attrs['get_attempts'] =get_attempts
+        attrs["question"] = check_question
         return attrs
 
     def create(self, validated_data):
-        exam_id = self.context['exam_pk']
-        # question_id = self.context['question_pk']
         user_id = self.context['request'].user.id
         question = validated_data.pop("question")
+        get_attempts = validated_data.pop("get_attempts")
 
+        # get student
         get_student = Student.objects.filter(user_id=user_id, is_active=True).only("id").first()
-        get_student_exam_attempt = StudentExamAttempt.objects.filter(
-            student_id=get_student.id,
-            is_active=True,
-            exam_id=exam_id
-        ).only("id").last()
 
+        # create student answer
         selected_choices = validated_data.pop("selected_choices", [])
         student_answer =  StudentAnswer.objects.create(
             question_id=question.id,
             student_id=get_student.id,
-            attempt_id=get_student_exam_attempt.id,
+            attempt_id=get_attempts.id,
             **validated_data
         )
+        # set choices
         student_answer.selected_choices.set(selected_choices)
+
+        # auto correct
+        if question.question_type == "multiple_choice":
+            self._grade_multiple_choice_question(student_answer, question, selected_choices)
         return student_answer
+
+    def _grade_multiple_choice_question(self, student_answer, question, selected_choices):
+        """
+        تصحیح خودکار سوالات چهارگزینه‌ای
+        """
+        correct_choices = Choice.objects.filter(
+            is_active=True,
+            is_correct=True,
+            question_id=question.id,
+        ).values_list("id", flat=True)
+
+        selected_ids = {choice.id for choice in selected_choices}
+        correct_set = set(correct_choices)
+
+        is_correct = (selected_ids == correct_set)
+
+        score = question.score if is_correct else 0
+
+        student_answer.score = score
+        student_answer.is_correct = is_correct
+        student_answer.graded_at = timezone.now()
+        student_answer.save()
 
 
 class CommentAttachmentSerializer(serializers.ModelSerializer):

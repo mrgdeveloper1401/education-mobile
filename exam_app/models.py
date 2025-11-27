@@ -208,17 +208,6 @@ class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
         default=0,
         verbose_name=_("نمره کسب شده")
     )
-    teacher_feedback = models.TextField(
-        blank=True,
-        verbose_name=_("نظر مربی")
-    )
-    # graded_by = models.ForeignKey(
-    #     "auth_app.Coach",
-    #     null=True,
-    #     blank=True,
-    #     on_delete=models.SET_NULL,
-    #     verbose_name=_("تصحیح کننده")
-    # )
     graded_at = models.DateTimeField(
         null=True,
         blank=True,
@@ -228,6 +217,10 @@ class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
         null=True,
         blank=True,
         verbose_name=_("صحیح است")
+    )
+    teacher_feedback = models.TextField(
+        blank=True,
+        verbose_name=_("نظر مربی")
     )
 
     class Meta:
