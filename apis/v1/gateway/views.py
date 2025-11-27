@@ -12,9 +12,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from base.clasess.gateway import Gateway
 from discount_app.models import Coupon
-from gateway_app.models import Gateway as GatewayModel
+from gateway_app.models import Gateway as GatewayModel, ResultGateway
 from subscription_app.models import SubscriptionPlan, UserSubscription
-from .serializer import GatewaySerializer, ListRetrieveGatewaySerializer
+from .serializer import GatewaySerializer, ListRetrieveGatewaySerializer, ListRetrieveResultGateWaySerializer
 from ...utils.custom_exceptions import PlanAlreadyExistsException, TooManyRequests, PaymentTooManyRequests, \
     AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound
 from ...utils.custom_pagination import TwentyPageNumberPagination
@@ -320,3 +320,21 @@ class VerifyPayment(APIView):
 
             case _:
                 raise NotAcceptable()
+
+
+class ListRetrieveResultGateWayViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = ListRetrieveResultGateWaySerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        gateway_id = self.kwargs.get('gateway_pk')
+        user_id = self.request.user.id
+
+        fields = self.serializer_class.Meta.fields
+
+        return ResultGateway.objects.filter(
+            gateway_id=gateway_id,
+            gateway__user_id=user_id,
+            gateway__is_active=True,
+            is_active=True,
+        ).only(*fields)

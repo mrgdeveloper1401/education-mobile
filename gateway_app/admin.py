@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from .models import Gateway
+from .models import Gateway, ResultGateway
 
 
 @admin.register(Gateway)
@@ -38,3 +38,23 @@ class GatewayAdmin(admin.ModelAdmin):
             )
         else:
             return qs
+
+
+@admin.register(ResultGateway)
+class ResultGatewayAdmin(admin.ModelAdmin):
+    raw_id_fields = ("gateway",)
+    list_display = (
+        "id",
+        "gateway_id",
+        "paid_at",
+        "amount",
+        "ref_number",
+        "order_id",
+        "is_active",
+        "created_at",
+    )
+    search_fields = ("gateway__user__mobile_phone",)
+    search_help_text = _("برای جست و جو میتوانید از شماره موبایل کاربر استفاده کنید")
+    list_display_links = ("id", "gateway_id", "paid_at")
+    list_per_page = 20
+    list_filter = ("is_active", "created_at")

@@ -1,9 +1,8 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from adrf.serializers import ModelSerializer as AdrfModelSerializer, Serializer as AdrfSerializer
+from adrf.serializers import Serializer as AdrfSerializer
 
-from gateway_app.models import Gateway
-from subscription_app.models import SubscriptionPlan
+from gateway_app.models import Gateway, ResultGateway
 
 
 class GatewaySerializer(AdrfSerializer):
@@ -29,3 +28,20 @@ class ListRetrieveGatewaySerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.CharField())
     def get_plan_name(self, obj):
         return obj.subscription.name
+
+
+class ListRetrieveResultGateWaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResultGateway
+        fields = (
+            "id",
+            "created_at",
+            "paid_at",
+            "amount",
+            "result",
+            "status",
+            "ref_number",
+            "card_number",
+            "order_id",
+            "message"
+        )
