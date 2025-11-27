@@ -24,7 +24,7 @@ from .serializers import (
     ListClassSerializer,
     ExamQuestionSerializer,
     SectionLessonCourseSerializer,
-    DetailSectionLessonCourseSerializer
+    DetailSectionLessonCourseSerializer, UpdateStudentAnswerSerializer
 )
 from ...utils.custom_pagination import TwentyPageNumberPagination, ScrollPagination
 from ...utils.custom_permissions import IsOwnerOrReadOnly
@@ -251,15 +251,21 @@ class StudentAnswerViewSet(
 
         return StudentAnswer.objects.filter(
             student__user_id=self.request.user.id,
-            question_id=self.kwargs["pk"],
+            question_id=self.kwargs["question_pk"],
             is_active=True,
         )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['exam_pk'] = self.kwargs["exam_pk"]
-        context['question_pk'] = self.kwargs["pk"]
+        context['question_pk'] = self.kwargs["question_pk"]
         return context
+
+    def get_serializer_class(self):
+        if self.action == "partial_update":
+            return UpdateStudentAnswerSerializer
+        else:
+            return super().get_serializer_class()
 
 
 common_params = [

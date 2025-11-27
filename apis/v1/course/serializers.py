@@ -305,6 +305,129 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         student_answer.save()
 
 
+class UpdateStudentAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentAnswer
+        fields = (
+            "id",
+            "selected_choices",
+            "status",
+            "score",
+            "graded_at",
+            "is_correct",
+            "created_at"
+        )
+        extra_kwargs = {
+            "score": {"read_only": True},
+            "graded_at": {"read_only": True},
+            "is_correct": {"read_only": True},
+            "created_at": {"read_only": True},
+        }
+
+    def validate(self, attrs):
+        question_id = self.context['question_pk']
+        exam_id = self.context['exam_pk']
+        selected_choices = attrs.get('selected_choices', None)
+        status = attrs.get("status", None)
+
+        # دریافت سوال مربوطه
+        check_question = Question.objects.filter(
+            id=question_id, is_active=True, exam_id=exam_id
+        ).only("id", "question_type", "score").first()
+
+        if not check_question:
+            raise NotFound("سوال یافت نشد")
+
+        # بررسی نوع سوال و فیلدهای ارسالی
+        if check_question.question_type == "multiple_choice" and not selected_choices:
+            raise PermissionDenied("برای سوال چهارگزینه‌ای باید گزینه‌ها را انتخاب کنید")
+
+        if check_question.question_type == "code" and not status:
+            raise PermissionDenied("برای سوال کد باید وضعیت را مشخص کنید")
+
+        attrs["question"] = check_question
+        return attrs
+
+    def update(self, instance, validated_data):
+        user_id = self.context['request'].user.id
+        question = instance.question
+
+        # دریافت فیلدهای قابل اپدیت
+        selected_choices = validated_data.pop('selected_choices', None)
+        status = validated_data.get('status', None)
+
+        # بررسی مجوزهای اپدیت
+        self._check_update_permissions(instance, user_id)
+
+        # اپدیت فیلدهای معمولی
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # اپدیت گزینه‌های انتخاب شده اگر ارسال شده باشد
+        if selected_choices is not None:
+            instance.selected_choices.set(selected_choices)
+
+        # تصحیح خودکار پس از اپدیت
+        if question.question_type == "multiple_choice" and selected_choices is not None:
+            self._grade_multiple_choice_question(instance, question, selected_choices)
+        elif question.question_type == "code" and status is not None:
+            self._auto_correct_question_code(status, question, instance)
+
+        instance.save()
+        return instance
+
+    def _check_update_permissions(self, instance, user_id):
+        """بررسی مجوزهای اپدیت"""
+        # بررسی مالکیت پاسخ
+        if instance.student.user_id != user_id:
+            raise PermissionDenied("شما مجوز ویرایش این پاسخ را ندارید")
+
+        # بررسی اینکه آزمون هنوز تمام نشده باشد
+        if instance.attempt.submitted_at is not None:
+            raise PermissionDenied("نمی‌توانید پاسخ آزمون تمام شده را ویرایش کنید")
+
+        # بررسی اینکه سوال فعال باشد
+        if not instance.question.is_active:
+            raise PermissionDenied("این سوال غیرفعال است")
+
+    def _grade_multiple_choice_question(self, student_answer, question, selected_choices):
+        """
+        تصحیح خودکار سوالات چهارگزینه‌ای
+        """
+        correct_choices = Choice.objects.filter(
+            is_active=True,
+            is_correct=True,
+            question_id=question.id,
+        ).values_list("id", flat=True)
+
+        selected_ids = {choice.id for choice in selected_choices}
+        correct_set = set(correct_choices)
+
+        is_correct = (selected_ids == correct_set)
+        score = question.score if is_correct else 0
+
+        student_answer.score = score
+        student_answer.is_correct = is_correct
+        student_answer.graded_at = timezone.now()
+        student_answer.save()
+
+    def _auto_correct_question_code(self, status, question, student_answer):
+        if status == "accepted":
+            student_answer.is_correct = True
+            student_answer.graded_at = timezone.now()
+            student_answer.score = question.score
+            student_answer.status = status
+        elif status == "reject":
+            student_answer.is_correct = False
+            student_answer.graded_at = timezone.now()
+            student_answer.score = 0
+            student_answer.status = status
+        else:
+            student_answer.status = status
+            student_answer.graded_at = timezone.now()
+        student_answer.save()
+
+
 class CommentAttachmentSerializer(serializers.ModelSerializer):
     file_link = serializers.SerializerMethodField()
     file_type = serializers.SerializerMethodField()

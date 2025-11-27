@@ -21,11 +21,24 @@ category_router.register("category_comment", views.CategoryCommentViewSet, basen
 urlpatterns = [
     path('exam/<int:exam_pk>/questions/', views.QuestionView.as_view(), name='exam_question'),
     path(
-        'exam/<int:exam_pk>/questions/<int:pk>/student_answer/',
+        'exam/<int:exam_pk>/questions/<int:question_pk>/student_answer/',
         views.StudentAnswerViewSet.as_view(
-            {"get": "list", 'post': "create"}
+            {
+                "get": "list",
+                'post': "create",
+            }
         ),
         name='student-answer-list'
     ),
+    path(
+        'exam/<int:exam_pk>/questions/<int:question_pk>/student_answer/<int:pk>/',
+        views.StudentAnswerViewSet.as_view(
+            {
+                "get": "retrieve",
+                'patch': 'partial_update'
+            }
+            ),
+            name='student-answer-detail'
+        ),
     path("exam_done/<int:exam_pk>/", views.ExamDoneView.as_view(), name="exam_done"),
 ] + router.urls + lesson_course_router.urls + category_router.urls

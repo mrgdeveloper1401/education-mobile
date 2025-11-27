@@ -134,7 +134,7 @@ class ChoiceAdmin(admin.ModelAdmin):
 
 @admin.register(StudentAnswer)
 class StudentAnswerAdmin(admin.ModelAdmin):
-    list_display = ("id", 'attempt_id', 'question_id', "student_id", 'score', 'is_correct', 'graded_at')
+    list_display = ("id", 'attempt_id', 'question_id', "student_id", 'score', 'is_correct', "status", 'graded_at')
     list_filter = ('is_correct', "is_active")
     ordering = ("-id",)
     raw_id_fields = ("attempt", "question", "student")
