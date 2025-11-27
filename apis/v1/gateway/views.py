@@ -6,13 +6,15 @@ from adrf.views import APIView
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import NotFound, NotAcceptable
+from rest_framework import mixins, viewsets
+from rest_framework.exceptions import NotFound, NotAcceptable, PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 
 from base.clasess.gateway import Gateway
 from discount_app.models import Coupon
 from gateway_app.models import Gateway as GatewayModel
 from subscription_app.models import SubscriptionPlan, UserSubscription
-from .serializer import GatewaySerializer
+from .serializer import GatewaySerializer, ListRetrieveGatewaySerializer
 from ...utils.custom_exceptions import PlanAlreadyExistsException, TooManyRequests, PaymentTooManyRequests, \
     AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound
 from ...utils.custom_permissions import AsyncIsAuthenticated
@@ -81,6 +83,18 @@ class GatewayView(APIView):
             transaction_id=transaction_id
         )
 
+    async def _check_have_plan(self, plan_id, user_id):
+        plan = await UserSubscription.objects.filter(
+            id=plan_id,
+            user_id=user_id,
+            is_active=True,
+            start_date__lte=timezone.now(),
+            end_date__gte=timezone.now(),
+            status="active"
+        ).aexists()
+        if plan:
+            raise PermissionDenied("شما از قبل پلن فعالی رو دارید")
+
     async def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -95,6 +109,9 @@ class GatewayView(APIView):
         plain_id = serializer.validated_data['plan']
         description = serializer.validated_data.get('description', None)
         coupon_code = serializer.validated_data.get('coupon_code', None)
+
+        # check have plan
+        await self._check_have_plan(plain_id, user_id)
 
         # check plan
         plan = await self.check_plan(plain_id)
@@ -171,6 +188,16 @@ class GatewayView(APIView):
                 data=result,
                 message="خطایی رخ داده هست"
             )
+
+
+class ListRetrieveGatewayViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ListRetrieveGatewaySerializer
+
+    def get_queryset(self):
+        return GatewayModel.objects.filter(
+            user_id=self.request.user.id
+        )
 
 
 class VerifyPayment(APIView):

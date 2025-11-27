@@ -9,3 +9,9 @@ class GatewaySerializer(AdrfSerializer):
     description = serializers.CharField(required=False)
     coupon_code = serializers.CharField(required=False)
     plan = serializers.IntegerField()
+
+
+class ListRetrieveGatewaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Gateway
+        fields = '__all__'
