@@ -22,5 +22,6 @@ class Gateway(CreateMixin, UpdateMixin, ActiveMixin):
 
     class Meta:
         db_table = "gateway"
+        ordering = ("id",)
         verbose_name_plural = _("درخواست های پرداخت")
         verbose_name = _("درخواست پرداخت")

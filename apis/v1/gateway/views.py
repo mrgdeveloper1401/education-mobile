@@ -17,6 +17,7 @@ from subscription_app.models import SubscriptionPlan, UserSubscription
 from .serializer import GatewaySerializer, ListRetrieveGatewaySerializer
 from ...utils.custom_exceptions import PlanAlreadyExistsException, TooManyRequests, PaymentTooManyRequests, \
     AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound
+from ...utils.custom_pagination import TwentyPageNumberPagination
 from ...utils.custom_permissions import AsyncIsAuthenticated
 from ...utils.custom_response import response
 
@@ -191,13 +192,18 @@ class GatewayView(APIView):
 
 
 class ListRetrieveGatewayViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    pagination --> 20 item
+    """
     permission_classes = (IsAuthenticated,)
     serializer_class = ListRetrieveGatewaySerializer
+    pagination_class = TwentyPageNumberPagination
 
     def get_queryset(self):
+        fields = ("subscription__name", "is_complete", "created_at", "updated_at")
         return GatewayModel.objects.filter(
             user_id=self.request.user.id
-        )
+        ).select_related("subscription").only(*fields)
 
 
 class VerifyPayment(APIView):
