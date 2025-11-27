@@ -168,40 +168,38 @@ class SectionLessonCourseViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
 
 
 class QuestionView(ListAPIView):
-    """
-    نمایش سوالات ازمون
-    """
     serializer_class = ExamQuestionSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        # if getattr(self, 'swagger_fake_view', False):
-        #     return Question.objects.none()
-
         user_id = self.request.user.id
-        # check student attempts
-        if not StudentExamAttempt.objects.filter(
-            student__user_id=user_id,
-            exam_id=self.kwargs["exam_pk"],
-        ).exists():
-            raise PermissionDenied(detail="شما در ازمون شرکت نکرده اید")
-        else:
-            return Question.objects.filter(
-                is_active=True,
-                exam_id=self.kwargs["exam_pk"],
-            ).only(
-                "question_text",
-                "question_type",
-                "score",
-                "display_order",
-                "explanation"
-            ).prefetch_related(
-                Prefetch(
-                    "choices",
-                    queryset=Choice.objects.filter(is_active=True).only("question_id", "choice_text"),
-                )
-            )
+        exam_id = self.kwargs["exam_pk"]
 
+        # Cache the result to avoid duplicate queries
+        if not hasattr(self, '_has_active_attempt'):
+            self._has_active_attempt = StudentExamAttempt.objects.filter(
+                student__user_id=user_id,
+                exam_id=exam_id,
+                submitted_at__isnull=True
+            ).exists()
+
+        if not self._has_active_attempt:
+            raise PermissionDenied(detail="شما در آزمون شرکت نکرده اید")
+
+        return Question.objects.filter(
+            is_active=True,
+            exam_id=exam_id,
+        ).only(
+            "question_text", "question_type", "score",
+            "display_order", "explanation"
+        ).prefetch_related(
+            Prefetch(
+                "choices",
+                queryset=Choice.objects.filter(is_active=True).only(
+                    "question_id", "choice_text"
+                ),
+            )
+        )
 
 class StudentExamAttemptView(
     mixins.ListModelMixin,

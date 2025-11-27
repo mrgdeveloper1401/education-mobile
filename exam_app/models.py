@@ -167,7 +167,7 @@ class StudentExamAttempt(CreateMixin, UpdateMixin, ActiveMixin):
         db_table = 'student_exam_attempt'
         unique_together = ('student', 'exam')
         verbose_name = _("شرکت در آزمون")
-        verbose_name_plural = _("شرکت‌های در آزمون")
+        verbose_name_plural = _("ازمون های شرکت کرده")
 
 
 class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
