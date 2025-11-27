@@ -4,7 +4,9 @@ from . import views
 
 
 app_name = "v1_course"
+
 router = SimpleRouter()
+
 router.register("lesson_course", views.ListLessonClassView, basename="lesson_course")
 router.register("student_exam_attempts", views.StudentExamAttemptView, basename='student_exam_attempts')
 router.register("category", views.ListDetailCategoryView, basename="category")

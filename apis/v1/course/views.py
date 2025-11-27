@@ -58,7 +58,7 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
             "course__course_image__height",
             "course__course_image__width",
             "class_name",
-            "progress",
+            # "progress",
             "is_free"
         ).order_by("-id")
 

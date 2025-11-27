@@ -18,5 +18,5 @@ class LessonCourseFilter(FilterSet):
         model = LessonCourse
         fields = {
             "is_free": ("exact",),
-            "progress": ("exact",),
+            # "progress": ("exact",),
         }

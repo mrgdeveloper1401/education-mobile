@@ -134,7 +134,7 @@ class StudentEnrollmentInline(admin.TabularInline):
 class LessonCourseAdmin(admin.ModelAdmin):
     list_display = (
         'class_name',
-        'progress',
+        # 'progress',
         'is_active',
         "is_free",
         'created_at'
@@ -142,7 +142,7 @@ class LessonCourseAdmin(admin.ModelAdmin):
     list_filter = (
         'is_active',
         "is_free",
-        'progress',
+        # 'progress',
         'created_at'
     )
     search_fields = (

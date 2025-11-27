@@ -74,12 +74,12 @@ class LessonCourse(CreateMixin, UpdateMixin, ActiveMixin):
         through="StudentEnrollment",
         verbose_name=_("دانش جو")
     )
-    progress = models.CharField(
-        help_text=_("وضعیت پیشرفت کلاس"),
-        choices=ProgresChoices.choices,
-        max_length=11,
-        default=ProgresChoices.not_started.value
-    )
+    # progress = models.CharField(
+    #     help_text=_("وضعیت پیشرفت کلاس"),
+    #     choices=ProgresChoices.choices,
+    #     max_length=11,
+    #     default=ProgresChoices.not_started.value
+    # )
     # for_mobile = models.BooleanField(default=False)
 
     class Meta:

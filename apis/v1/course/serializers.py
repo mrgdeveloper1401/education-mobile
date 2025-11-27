@@ -34,7 +34,7 @@ class ListClassSerializer(serializers.ModelSerializer):
             "course_name",
             "project_counter",
             "course_image",
-            "progress",
+            # "progress",
             "is_free"
         )
 
