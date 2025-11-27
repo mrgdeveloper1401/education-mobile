@@ -156,7 +156,6 @@ class StudentExamAttempt(CreateMixin, UpdateMixin, ActiveMixin):
         max_length=20,
         choices=[
             ('in_progress', _("در حال انجام")),
-            ('graded', _("تصحیح شده")),
             ("done", _("ازموت تمام شده"))
         ],
         default='in_progress',

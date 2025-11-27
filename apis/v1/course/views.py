@@ -180,7 +180,8 @@ class QuestionView(ListAPIView):
             self._has_active_attempt = StudentExamAttempt.objects.filter(
                 student__user_id=user_id,
                 exam_id=exam_id,
-                submitted_at__isnull=True
+                submitted_at__isnull=True,
+                status='in_progress'
             ).exists()
 
         if not self._has_active_attempt:
