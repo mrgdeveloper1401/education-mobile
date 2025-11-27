@@ -216,6 +216,7 @@ class StudentAnswer(CreateMixin, UpdateMixin, ActiveMixin):
     is_correct = models.BooleanField(
         null=True,
         blank=True,
+        default=False,
         verbose_name=_("صحیح است")
     )
     teacher_feedback = models.TextField(

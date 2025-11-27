@@ -240,6 +240,7 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         user_id = self.context['request'].user.id
         question = validated_data.pop("question")
         get_attempts = validated_data.pop("get_attempts")
+        status = validated_data.pop("status", None)
 
         # get student
         get_student = Student.objects.filter(user_id=user_id, is_active=True).only("id").first()
@@ -252,12 +253,16 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
             attempt_id=get_attempts.id,
             **validated_data
         )
+
         # set choices
         student_answer.selected_choices.set(selected_choices)
 
         # auto correct
         if question.question_type == "multiple_choice":
+            # auto correct
             self._grade_multiple_choice_question(student_answer, question, selected_choices)
+        if question.question_type == "code":
+            self._auto_correct_question_code(status=status, question=question, student_answer=student_answer)
         return student_answer
 
     def _grade_multiple_choice_question(self, student_answer, question, selected_choices):
@@ -281,6 +286,13 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         student_answer.is_correct = is_correct
         student_answer.graded_at = timezone.now()
         student_answer.save()
+
+    def _auto_correct_question_code(self, status, question, student_answer):
+        if status == "accepted":
+            student_answer.is_correct = True
+            student_answer.graded_at = timezone.now()
+            student_answer.score = question.score
+            student_answer.save()
 
 
 class CommentAttachmentSerializer(serializers.ModelSerializer):
