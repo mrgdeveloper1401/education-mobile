@@ -61,15 +61,13 @@ class CategoryAdmin(TreeAdmin):
 class CourseAdmin(admin.ModelAdmin):
     list_display = (
         'course_name',
-        'category',
-        'is_free',
+        'category_id',
         'is_active',
         'project_counter',
         'created_at'
     )
     list_filter = (
         'is_active',
-        'is_free',
         'category',
         'created_at'
     )
@@ -93,7 +91,6 @@ class CourseAdmin(admin.ModelAdmin):
         (_('تنظیمات دوره'), {
             'fields': (
                 'is_active',
-                'is_free',
                 'project_counter',
                 'course_level',
                 'time_course',
@@ -112,7 +109,6 @@ class CourseAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related("category", "course_image").only(
             "course_name",
             "is_active",
-            "is_free",
             "project_counter",
             "course_level",
             "time_course",
@@ -125,6 +121,7 @@ class CourseAdmin(admin.ModelAdmin):
             "course_description",
             "facilities"
         )
+
 
 class StudentEnrollmentInline(admin.TabularInline):
     model = StudentEnrollment
@@ -139,10 +136,12 @@ class LessonCourseAdmin(admin.ModelAdmin):
         'class_name',
         'progress',
         'is_active',
+        "is_free",
         'created_at'
     )
     list_filter = (
         'is_active',
+        "is_free",
         'progress',
         'created_at'
     )
@@ -160,7 +159,8 @@ class LessonCourseAdmin(admin.ModelAdmin):
                 'course',
                 'class_name',
                 'coach',
-                'is_active'
+                'is_active',
+                "is_free",
             )
         }),
         (_('وضعیت کلاس'), {
@@ -217,6 +217,7 @@ class StudentEnrollmentAdmin(admin.ModelAdmin):
             "created_at",
             "updated_at"
         )
+
 
 class SectionVideoInline(admin.TabularInline):
     model = SectionVideo
@@ -296,6 +297,7 @@ class SectionAdmin(admin.ModelAdmin):
             "description"
         )
 
+
 @admin.register(SectionVideo)
 class SectionVideoAdmin(admin.ModelAdmin):
     list_display = (
@@ -338,6 +340,7 @@ class SectionVideoAdmin(admin.ModelAdmin):
             "section__title",
             "video__video_file"
         )
+
 
 @admin.register(StudentAccessSection)
 class StudentAccessSectionAdmin(admin.ModelAdmin):

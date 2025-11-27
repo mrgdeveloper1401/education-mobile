@@ -23,7 +23,7 @@ class ListClassSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source="course.course_name", read_only=True)
     project_counter = serializers.CharField(source="course.project_counter", read_only=True)
     course_image = serializers.SerializerMethodField()
-    course_category = serializers.CharField(source="course.category.course_category", read_only=True)
+    course_category = serializers.SerializerMethodField()
 
     class Meta:
         model = LessonCourse
@@ -35,11 +35,16 @@ class ListClassSerializer(serializers.ModelSerializer):
             "project_counter",
             "course_image",
             "progress",
+            "is_free"
         )
 
     @extend_schema_field(serializers.URLField())
     def get_course_image(self, obj):
         return obj.course.course_image.course_image if obj.course.course_image else None
+
+    @extend_schema_field(serializers.CharField())
+    def get_course_category(self, obj):
+        return obj.course.category.category_name
 
 
 class SectionExamSerializer(AdrfModelSerializer):

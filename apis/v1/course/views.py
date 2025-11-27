@@ -11,7 +11,7 @@ from core_app.models import Attachment
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, CategoryComment, \
     CommentAttachment
-from .filters import StudentExamAttemptFilter
+from .filters import StudentExamAttemptFilter, LessonCourseFilter
 from .serializers import (
     CreateStudentExamAttemptSerializer,
     ListDetailStudentExamAttemptSerializer,
@@ -45,6 +45,7 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
     serializer_class = ListClassSerializer
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = TwentyPageNumberPagination
+    filterset_class = LessonCourseFilter
 
     def get_queryset(self):
         return LessonCourse.objects.filter(
@@ -57,7 +58,8 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
             "course__course_image__height",
             "course__course_image__width",
             "class_name",
-            "progress"
+            "progress",
+            "is_free"
         ).order_by("-id")
 
 

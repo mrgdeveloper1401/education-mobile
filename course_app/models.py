@@ -43,7 +43,6 @@ class Course(CreateMixin, UpdateMixin, ActiveMixin):
         on_delete=models.PROTECT,
     )
     project_counter = models.PositiveSmallIntegerField(null=True)
-    is_free = models.BooleanField(default=False)
     facilities = ArrayField(models.CharField(max_length=30), blank=True, null=True)
     course_level = models.CharField(max_length=13, null=True, blank=True)
     time_course = models.CharField(max_length=10, help_text="مدت زمان دوره")
@@ -61,6 +60,7 @@ class LessonCourse(CreateMixin, UpdateMixin, ActiveMixin):
         related_name="lesson_course",
         verbose_name=_("دوره")
     )
+    is_free = models.BooleanField(default=False)
     class_name = models.CharField(help_text=_("نام کلاس"))
     coach = models.ForeignKey(
         "auth_app.Coach",
