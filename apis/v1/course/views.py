@@ -42,9 +42,14 @@ class ListDetailCategoryView(mixins.ListModelMixin, mixins.RetrieveModelMixin, v
 
 
 class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    page_size = 20
+    max_page_size = 100
+    page_size_query_param = 'page_size'
+    """
     serializer_class = ListClassSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    pagination_class = TwentyPageNumberPagination
+    pagination_class = ScrollPagination
     filterset_class = LessonCourseFilter
 
     def get_queryset(self):
@@ -54,6 +59,7 @@ class ListLessonClassView(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
             "course__category__category_name",
             "course__course_name",
             "course__project_counter",
+            "course__course_description",
             "course__course_image__image",
             "course__course_image__height",
             "course__course_image__width",

@@ -25,12 +25,14 @@ class ListClassSerializer(serializers.ModelSerializer):
     project_counter = serializers.CharField(source="course.project_counter", read_only=True)
     course_image = serializers.SerializerMethodField()
     course_category = serializers.SerializerMethodField()
+    course_description = serializers.SerializerMethodField()
 
     class Meta:
         model = LessonCourse
         fields = (
             "id",
             "class_name",
+            "course_description",
             "course_category",
             "course_name",
             "project_counter",
@@ -46,6 +48,10 @@ class ListClassSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.CharField())
     def get_course_category(self, obj):
         return obj.course.category.category_name
+
+    @extend_schema_field(serializers.CharField())
+    def get_course_description(self, obj):
+        return obj.course.course_description
 
 
 class SectionExamSerializer(AdrfModelSerializer):
