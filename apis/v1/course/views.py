@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Prefetch, Exists, OuterRef, Sum
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_view
@@ -7,6 +8,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
+from auth_app.models import Student
 from core_app.models import Attachment
 from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, CategoryComment, \
@@ -390,35 +392,63 @@ class ExamDoneView(APIView):
         serializer.is_valid(raise_exception=True)
 
         exam_id = serializer.validated_data["exam_id"]
-        exam_last = StudentExamAttempt.objects.filter(
-            exam_id=exam_id,
-            is_active=True,
-            student__user_id=request.user.id,
-            submitted_at__isnull=True,
-            status="in_progress"
-        ).select_related("exam").only("exam__total_score", "exam__passing_score").last()
-        if not exam_last:
-            raise PermissionDenied("شما ازمون فعالی رو ندارید")
-        else:
-            # sum student answer score
-            student_answer_score = self._calc_exam_score(exam_last.id, request.user.id)
-            sum_score = student_answer_score['sum_score']
 
-            # check user is passed
-            if exam_last.exam.passing_score > sum_score:
-                exam_last.is_passed = False
+        with transaction.atomic():
+            # import ipdb
+            # ipdb.set_trace()
+            exam_last = StudentExamAttempt.objects.filter(
+                exam_id=exam_id,
+                is_active=True,
+                student__user_id=request.user.id,
+                submitted_at__isnull=True,
+                status="in_progress"
+            ).select_related("exam__section").only(
+                "exam__total_score", "exam__passing_score", "exam__section__is_last_section", "exam__section__course_id"
+            ).last()
+            if not exam_last:
+                raise PermissionDenied("شما ازمون فعالی رو ندارید")
             else:
-                exam_last.is_passed = True
-            # save item
-            exam_last.status = "done"
-            exam_last.submitted_at = timezone.now()
-            exam_last.obtained_score = sum_score
-            exam_last.save()
+                # sum student answer score
+                student_answer_score = self._calc_exam_score(exam_last.id, request.user.id)
+                sum_score = student_answer_score['sum_score']
 
-            return response(
-                error=False,
-                status_code=200,
-                data={"exam_last_id": exam_last.id},
-                message="پردازش با موفقیت انجام شد",
-                status=True
+                # check user is passed
+                if exam_last.exam.passing_score > sum_score:
+                    exam_last.is_passed = False
+                else:
+                    exam_last.is_passed = True
+
+                    # check is last section and create next section
+                    if exam_last.exam.section.is_last_section is False:
+                        self._create_next_section(request.user.id, exam_last.exam.section_id, exam_last.exam.section.course_id)
+
+                # save item
+                exam_last.status = "done"
+                exam_last.submitted_at = timezone.now()
+                exam_last.obtained_score = sum_score
+                exam_last.save()
+
+                return response(
+                    error=False,
+                    status_code=200,
+                    data={"exam_last_id": exam_last.id},
+                    message="پردازش با موفقیت انجام شد",
+                    status=True
+                )
+
+    def _create_next_section(self, user_id, section_id, course_id):
+        # get after section
+        next_section = Section.objects.filter(
+            id__gt=section_id,
+            course_id=course_id,
+            is_active=True,
+        ).only("id").first()
+        if next_section:
+            # get student
+            student = Student.objects.filter(user_id=user_id, is_active=True).only("id").first()
+            # create student access section
+            StudentAccessSection.objects.create(
+                student_id=student.id,
+                section_id=next_section.id,
+                is_access=True
             )

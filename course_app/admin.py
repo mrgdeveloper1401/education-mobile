@@ -62,6 +62,7 @@ class CourseAdmin(admin.ModelAdmin):
     list_display = (
         'course_name',
         'category_id',
+        "id",
         'is_active',
         'project_counter',
         'created_at'
