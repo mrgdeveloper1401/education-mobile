@@ -140,10 +140,10 @@ class StudentExamAttempt(CreateMixin, UpdateMixin, ActiveMixin):
         blank=True,
         verbose_name=_("زمان تحویل")
     )
-    total_score = models.FloatField(
-        default=0,
-        verbose_name=_("نمره کل")
-    )
+    # total_score = models.FloatField(
+    #     default=0,
+    #     verbose_name=_("نمره کل")
+    # )
     obtained_score = models.FloatField(
         default=0,
         verbose_name=_("نمره کسب شده")

@@ -107,7 +107,7 @@ class StudentExamAttemptAdmin(admin.ModelAdmin):
             "status",
             "created_at",
             "exam_id",
-            "total_score"
+            # "total_score"
         )
 
 

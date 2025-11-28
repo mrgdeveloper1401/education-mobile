@@ -168,6 +168,7 @@ class CreateStudentExamAttemptSerializer(serializers.Serializer):
 
 class ListDetailStudentExamAttemptSerializer(serializers.ModelSerializer):
     passing_score = serializers.IntegerField(source="exam.passing_score", read_only=True)
+    total_score = serializers.SerializerMethodField()
 
     class Meta:
         model = StudentExamAttempt
@@ -182,6 +183,9 @@ class ListDetailStudentExamAttemptSerializer(serializers.ModelSerializer):
             "is_passed",
             "status"
         )
+
+    def get_total_score(self, obj):
+        return obj.exam.total_score
 
 
 class StudentAnswerSerializer(serializers.ModelSerializer):
@@ -563,3 +567,7 @@ class UpdateCategoryCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryComment
         fields = ("comment_body", "is_pined")
+
+
+class ExamDoneSerializer(serializers.Serializer):
+    exam_id = serializers.IntegerField()

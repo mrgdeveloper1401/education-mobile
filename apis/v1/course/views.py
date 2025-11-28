@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Exists, OuterRef
+from django.db.models import Prefetch, Exists, OuterRef, Sum
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_view
 from rest_framework import mixins, viewsets, permissions
@@ -24,7 +24,7 @@ from .serializers import (
     ListClassSerializer,
     ExamQuestionSerializer,
     SectionLessonCourseSerializer,
-    DetailSectionLessonCourseSerializer, UpdateStudentAnswerSerializer
+    DetailSectionLessonCourseSerializer, UpdateStudentAnswerSerializer, ExamDoneSerializer
 )
 from ...utils.custom_pagination import TwentyPageNumberPagination, ScrollPagination
 from ...utils.custom_permissions import IsOwnerOrReadOnly
@@ -223,7 +223,7 @@ class StudentExamAttemptView(
     pagination_class = TwentyPageNumberPagination
 
     def get_queryset(self):
-        fields = ('exam__passing_score', "started_at", "total_score", "submitted_at", "obtained_score", "is_passed", "status")
+        fields = ('exam__passing_score', "started_at", "exam__total_score", "submitted_at", "obtained_score", "is_passed", "status")
         return StudentExamAttempt.objects.filter(
             student__user_id=self.request.user.id,
         ).select_related("exam").only(*fields).order_by("-id")
@@ -367,22 +367,49 @@ class UploadAttachmentView(
 
 class ExamDoneView(APIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = ExamDoneSerializer
+
+    def _calc_exam_score(self, exam_attempt_id, user_id):
+        student_answer_score = StudentAnswer.objects.filter(
+            is_active=True,
+            student__user_id=user_id,
+            attempt_id=exam_attempt_id,
+            is_correct=True
+        ).only("score").aggregate(
+            sum_score=Sum("score")
+        )
+        return student_answer_score
 
     def post(self, request, *args, **kwargs):
-        exam_id = kwargs["exam_pk"]
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        exam_id = serializer.validated_data["exam_id"]
         exam_last = StudentExamAttempt.objects.filter(
             exam_id=exam_id,
             is_active=True,
             student__user_id=request.user.id,
             submitted_at__isnull=True,
             status="in_progress"
-        ).only("id").last()
+        ).select_related("exam").only("exam__total_score", "exam__passing_score").last()
         if not exam_last:
             raise PermissionDenied("شما ازمون فعالی رو ندارید")
         else:
+            # sum student answer score
+            student_answer_score = self._calc_exam_score(exam_last.id, request.user.id)
+            sum_score = student_answer_score['sum_score']
+
+            # check user is passed
+            if exam_last.exam.passing_score > sum_score:
+                exam_last.is_passed = False
+            else:
+                exam_last.is_passed = True
+            # save item
             exam_last.status = "done"
             exam_last.submitted_at = timezone.now()
+            exam_last.obtained_score = sum_score
             exam_last.save()
+
             return response(
                 error=False,
                 status_code=200,

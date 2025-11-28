@@ -40,5 +40,5 @@ urlpatterns = [
             ),
             name='student-answer-detail'
         ),
-    path("exam_done/<int:exam_pk>/", views.ExamDoneView.as_view(), name="exam_done"),
+    path("exam_done/", views.ExamDoneView.as_view(), name="exam_done"),
 ] + router.urls + lesson_course_router.urls + category_router.urls
