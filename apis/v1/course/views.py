@@ -193,9 +193,8 @@ class QuestionView(ListAPIView):
         return Question.objects.filter(
             is_active=True,
             exam_id=exam_id,
-        ).only(
-            "question_text", "question_type", "score",
-            "display_order", "explanation"
+        ).select_related("exam").only(
+            "question_text", "question_type", "score", "display_order", "explanation", "exam__passing_score"
         ).prefetch_related(
             Prefetch(
                 "choices",

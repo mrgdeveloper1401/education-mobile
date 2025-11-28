@@ -137,6 +137,7 @@ class ChoiceSerializer(AdrfModelSerializer):
 
 class ExamQuestionSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True, read_only=True)
+    passing_score = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
@@ -145,10 +146,14 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
             "question_text",
             "question_type",
             "score",
+            "passing_score",
             "display_order",
             "explanation",
             "choices"
         )
+
+    def get_passing_score(self, obj):
+        return obj.exam.passing_score
 
 
 class CreateStudentExamAttemptSerializer(serializers.Serializer):
