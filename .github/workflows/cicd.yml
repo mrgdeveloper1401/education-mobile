@@ -1,0 +1,6 @@
+#name: django eudcation cicd
+#on:
+#  push:
+#    branches:
+#      - 'master'
+#jobs:

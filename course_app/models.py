@@ -6,7 +6,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 
 
 from core_app.models import CreateMixin, UpdateMixin, ActiveMixin
-from course_app.enums import ProgresChoices, StudentStatusEnum
+from course_app.enums import StudentStatusEnum
 
 
 class Category(MP_Node, CreateMixin, UpdateMixin, ActiveMixin):

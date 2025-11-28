@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import NotFound, PermissionDenied
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
 
+from apis.utils.custom_exceptions import ExamIsOpenException
 from auth_app.models import Student
 from core_app.models import Attachment
 from course_app.models import Category, LessonCourse, Section, SectionVideo, CategoryComment, CommentAttachment
@@ -154,6 +155,21 @@ class CreateStudentExamAttemptSerializer(serializers.Serializer):
     exam = serializers.PrimaryKeyRelatedField(
         queryset=SectionExam.objects.filter(is_active=True).only("id"),
     )
+
+    def validate(self, attrs):
+        user_id = self.context["request"].user.id
+        exam_id = attrs.get('exam', None)
+
+        # check exam is open
+        check_exam_attempts = StudentExamAttempt.objects.filter(
+            student__user_id=user_id,
+            exam_id=exam_id,
+            submitted_at__isnull=True,
+            status='in_progress'
+        ).exists()
+        if check_exam_attempts:
+            raise ExamIsOpenException()
+        return attrs
 
     def create(self, validated_data):
         user_id = self.context["request"].user.id

@@ -78,3 +78,9 @@ class PreventSendSubmitChallengeException(APIException):
     status_code = 403
     default_detail = "شما قبلا برای این چالش جواب رو فرستادید"
     default_code = "prevent_send_submit_challenge"
+
+
+class ExamIsOpenException(APIException):
+    status_code = 400
+    default_detail = "ازمون قبلی باز هست"
+    default_code = "exam_is_open"

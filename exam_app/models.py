@@ -164,7 +164,7 @@ class StudentExamAttempt(CreateMixin, UpdateMixin, ActiveMixin):
 
     class Meta:
         db_table = 'student_exam_attempt'
-        unique_together = ('student', 'exam')
+        # unique_together = ('student', 'exam')
         verbose_name = _("شرکت در آزمون")
         verbose_name_plural = _("ازمون های شرکت کرده")
 
