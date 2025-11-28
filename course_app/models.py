@@ -81,6 +81,7 @@ class LessonCourse(CreateMixin, UpdateMixin, ActiveMixin):
     #     default=ProgresChoices.not_started.value
     # )
     # for_mobile = models.BooleanField(default=False)
+    student_number = models.PositiveIntegerField(_("تعداد دانشجویان کلاس"), default=0)
 
     class Meta:
         ordering = ("id",)

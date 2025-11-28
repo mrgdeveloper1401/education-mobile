@@ -137,6 +137,7 @@ class LessonCourseAdmin(admin.ModelAdmin):
         # 'progress',
         'is_active',
         "is_free",
+        "student_number",
         'created_at'
     )
     list_filter = (
@@ -152,7 +153,7 @@ class LessonCourseAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     raw_id_fields = ('course', 'coach')
     inlines = (StudentEnrollmentInline,)
-
+    list_editable = ('is_free', "student_number")
     fieldsets = (
         (None, {
             'fields': (
