@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 from .models import User, State, City, Coach, Student
 
@@ -91,21 +92,31 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(State)
 class StateAdmin(admin.ModelAdmin):
-    list_display = ('id', 'state_name')
+    list_display = ('id', 'state_name', "get_city_cont")
     list_display_links = ('state_name',)
     search_fields = ('state_name',)
+    list_per_page = 20
+    search_help_text = _("برای جست و جو میتوانید از نام استان استفاده کنید")
 
     def get_queryset(self, request):
         return super().get_queryset(request).only(
             "state_name",
+        ).annotate(
+            city_count=Count("cities"),
         )
+
+    def get_city_cont(self, obj):
+        return obj.city_count
+
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
+    search_help_text = _("برای جست و جو میتوانید از نام شهر استفاده کنید")
     list_display = ('id', 'city', 'get_state_name')
     list_display_links = ('city',)
     search_fields = ('city', )
     raw_id_fields = ('state',)
+    list_per_page = 20
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("state").only(
@@ -114,6 +125,7 @@ class CityAdmin(admin.ModelAdmin):
         )
     def get_state_name(self, obj):
         return obj.state.state_name
+
 
 @admin.register(Coach)
 class CoachAdmin(admin.ModelAdmin):
@@ -159,6 +171,7 @@ class CoachAdmin(admin.ModelAdmin):
             "created_at",
             "updated_at",
         )
+
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
