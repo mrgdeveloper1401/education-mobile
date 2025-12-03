@@ -165,11 +165,11 @@ class LessonCourseAdmin(admin.ModelAdmin):
                 "is_free",
             )
         }),
-        (_('وضعیت کلاس'), {
-            'fields': (
-                'progress',
-            )
-        }),
+        # (_('وضعیت کلاس'), {
+        #     'fields': (
+        #         'progress',
+        #     )
+        # }),
         (_('تاریخ‌ها'), {
             'fields': ('created_at', 'updated_at')
         }),
@@ -349,6 +349,9 @@ class StudentAccessSectionAdmin(admin.ModelAdmin):
     list_display = (
         'get_student_phone',
         'get_section_name',
+        "get_course_name",
+        "id",
+        "section_id",
         'is_access',
         'is_active',
         'created_at'
@@ -386,10 +389,14 @@ class StudentAccessSectionAdmin(admin.ModelAdmin):
     def get_section_name(self, obj):
         return obj.section.title
 
+    def get_course_name(self, obj):
+        return obj.section.course.course_name
+
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("section", "student__user").only(
+        return super().get_queryset(request).select_related("section__course", "student__user").only(
             "student__user__mobile_phone",
             "section__title",
+            "section__course__course_name",
             "created_at",
             "updated_at",
             "is_active",
