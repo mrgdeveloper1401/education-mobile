@@ -13,7 +13,7 @@ async def create_profile(sender, instance, created, **kwargs):
     if created and not instance.is_coach:
         student, _  = await Student.objects.aget_or_create(user=instance)
     if created:
-        await UserChallengeScore.objects.acreate(user=instance)
+        user_challenge_score, _ = await UserChallengeScore.objects.aget_or_create(user=instance)
 
 
 @receiver(post_save, sender=Student)
