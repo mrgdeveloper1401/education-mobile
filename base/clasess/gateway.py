@@ -18,6 +18,7 @@ ZIBAL_VERIFY_URL = config("ZIBAL_VERIFY_URL", cast=str)
 # BAZAAR_REDIRECT_CLIENT_ID = config("BAZAAR_REDIRECT_CLIENT_ID", cast=str, default="")
 # BAZAAR_TOKEN_API_KEY = config("BAZAAR_TOKEN_API_KEY", cast=str, default="")
 BAZAAR_PAY_URL = config("BAZAAR_PAY_URL", cast=str, default="")
+BAZAAR_PAY_REDIRECT_URL = config("BAZAAR_REDIRECT_CLIENT_URL", cast=str)
 
 class Gateway:
     def __init__(self):
@@ -72,10 +73,17 @@ class Gateway:
 
 # coffee bazaar
 
-async def bazaar(amount: int, destination: str = "developer", service_name: str = None):
-    # check argument
-    # if amount is None or destination is None or service_name is None:
-    #     raise RequiredCoffeeBazaar()
+async def bazaar(
+        amount: int,
+        destination: str = "developers",
+        service_name: str = None,
+        phone: str = None,
+        redirect_url: str = None,
+):
+    # set redirect url
+    if not redirect_url:
+        redirect_url = BAZAAR_PAY_REDIRECT_URL
+
     # header
     headers = {
         "Content-Type": "application/json",
@@ -89,7 +97,16 @@ async def bazaar(amount: int, destination: str = "developer", service_name: str 
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(url=url, headers=headers, json=json)
-    return response.json()
+    res = response.json()
+    payment_url = res["payment_url"]
+
+    # add params into url
+    payment_url_params = f'{payment_url}&phone={phone}&redirect_url={redirect_url}'
+    res = {
+        "payment_url": payment_url_params,
+        "checkout_token": res["checkout_token"],
+    }
+    return res
 
 
 async def main():
@@ -100,7 +117,7 @@ async def main():
     # result3 = await g1.request_payment(50000, "hello world", "123", "09391640664")
     # result4 = await g1.request_payment(50000, "hello world", "123", "09391640664")
     # result5 = await g1.request_payment(50000, "hello world", "123", "09391640664")
-    # result6 = await bazaar(amount=10, destination="developers", service_name="codeima.ir")
+    # result6 = await bazaar(amount=10, destination="developers", service_name="codeima.ir", phone="09923081041", redirect_url=BAZAAR_PAY_REDIRECT_URL)
     # print(result6)
     # print(result1)
     # print(result2)

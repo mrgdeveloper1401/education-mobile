@@ -90,3 +90,14 @@ class RequiredCoffeeBazaar(APIException):
     status_code = 400
     default_detail = "قیمت و سرویس و مقصد اجباری هست"
     default_code = "required_cofee_bazaar"
+
+
+class GatewayNotFound(APIException):
+    status_code = 404
+    default_detail = "درگاه پرداخت باید زیبال باشد یا بازار"
+    default_code = "gateway_not_found"
+
+
+class InvalidIpGateway(APIException):
+    status_code = 403
+    default_code = "invalid_ip"

@@ -10,30 +10,48 @@ from rest_framework import mixins, viewsets
 from rest_framework.exceptions import NotFound, NotAcceptable, PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
-from base.clasess.gateway import Gateway
+from base.clasess.gateway import Gateway, bazaar
 from discount_app.models import Coupon
 from gateway_app.models import Gateway as GatewayModel, ResultGateway
 from subscription_app.models import SubscriptionPlan, UserSubscription
 from .serializer import GatewaySerializer, ListRetrieveGatewaySerializer, ListRetrieveResultGateWaySerializer
 from ...utils.custom_exceptions import PlanAlreadyExistsException, TooManyRequests, PaymentTooManyRequests, \
-    AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound
+    AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound, GatewayNotFound, InvalidIpGateway
 from ...utils.custom_pagination import TwentyPageNumberPagination
 from ...utils.custom_permissions import AsyncIsAuthenticated
 from ...utils.custom_response import response
 
 
 class GatewayView(APIView):
+    """
+    gateway view \n
+    gateway_name --> (bazaar, zibal)
+    """
     serializer_class = GatewaySerializer
     permission_classes = (AsyncIsAuthenticated,)
 
-    async def _create_gateway_record(self, user_id, plan_id, result, is_complete: bool = False):
+    async def _create_gateway_record(self, user_id, plan_id, result, gateway_name, is_complete: bool = False):
+        result_track_id = None
+        checkout_token = None
+        message_gateway = None
+        result_gateway = None
+
+        if gateway_name == "zibal":
+            result_track_id = result['trackId']
+            message_gateway = result['message']
+            result_gateway = result['result']
+        elif gateway_name == "bazaar":
+            checkout_token = result['checkout_token']
+
         await GatewayModel.objects.acreate(
             user_id=user_id,
             subscription_id=plan_id,
-            track_id=result['trackId'],
-            message_gateway=result['message'],
-            result_gateway=result['result'],
-            is_complete=is_complete
+            track_id=result_track_id,
+            message_gateway=message_gateway,
+            result_gateway=result_gateway,
+            is_complete=is_complete,
+            gateway_name=gateway_name,
+            checkout_token=checkout_token,
         )
 
     async def check_plan(self, plan_id):
@@ -96,7 +114,15 @@ class GatewayView(APIView):
         if plan:
             raise PermissionDenied("شما از قبل پلن فعالی رو دارید")
 
+    def handler_error(self, result):
+        match result:
+            case 115:
+                raise InvalidIpGateway(detail=result)
+            case _:
+                raise NotAcceptable(detail=result)
+
     async def post(self, request):
+        # import ipdb; ipdb.set_trace()
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -110,6 +136,11 @@ class GatewayView(APIView):
         plain_id = serializer.validated_data['plan']
         description = serializer.validated_data.get('description', None)
         coupon_code = serializer.validated_data.get('coupon_code', None)
+        gateway_name = serializer.validated_data.get('gateway_name')
+
+        # check gateway name data
+        if not gateway_name == "zibal" and not gateway_name == "bazaar":
+            raise GatewayNotFound()
 
         # check have plan
         await self._check_have_plan(plain_id, user_id)
@@ -138,7 +169,7 @@ class GatewayView(APIView):
                 "message": "پرداخت با موفقیت انجام شد",
                 "result": 100
             }
-            await self._create_gateway_record(user_id, plan.id, result, is_complete=True)
+            await self._create_gateway_record(user_id, plan.id, result, gateway_name=None, is_complete=True)
             await UserSubscription.objects.acreate(
                 user_id=user_id,
                 plan_id=plan.id,
@@ -155,25 +186,29 @@ class GatewayView(APIView):
                 status=True
             )
 
-        # request gateway
-        gate_way = Gateway()
-        price = price * 10
-        result = await gate_way.request_payment(
-            amount=price,
-            description=description,
-            order_id=plain_id,
-            mobile=phone,
-        )
+        # request gateway into zibal
+        if gateway_name == "zibal":
+            gate_way = Gateway()
+            price = price * 10
+            result = await gate_way.request_payment(
+                amount=price,
+                description=description,
+                order_id=plain_id,
+                mobile=phone,
+            )
 
-        # create gateway record
-        await self._create_gateway_record(user_id, plan.id, result)
+            # check result  code
+            if result['result'] != 100:
+                self.handler_error(result)
 
-        # create user plan
-        transaction_id = f'{int(time.time())}_{uuid4().time}'
-        await self._create_user_plan(user_id, plan.id, plan.duration, transaction_id)
+            # create gateway record
+            await self._create_gateway_record(user_id, plan.id, result, gateway_name=gateway_name)
 
-        # check result and return response
-        if result['result'] == 100:
+            # create user plan
+            transaction_id = f'{int(time.time())}_{uuid4().time}'
+            await self._create_user_plan(user_id, plan.id, plan.duration, transaction_id)
+
+            # return response
             return response(
                 status_code=201,
                 status=True,
@@ -181,13 +216,29 @@ class GatewayView(APIView):
                 data=result,
                 message="پردازش با موفقیت انجام شد"
             )
-        else:
+
+        # request gateway into bazaar
+        elif gateway_name == "bazaar":
+            price = price * 10
+            result_bazaar_gateway = await bazaar(
+                amount=price,
+                destination="developers",
+                service_name="codeima.ir",
+                phone=phone
+            )
+
+            # create gateway record
+            await self._create_gateway_record(user_id=user_id, plan_id=plan.id, result=result_bazaar_gateway, gateway_name=gateway_name)
+
+            # create user plan
+            transaction_id = f'{int(time.time())}_{uuid4().time}'
+            await self._create_user_plan(user_id, plan.id, plan.duration, transaction_id)
             return response(
-                status_code=400,
-                status=False,
-                error=True,
-                data=result,
-                message="خطایی رخ داده هست"
+                status_code=201,
+                status=True,
+                error=False,
+                data=result_bazaar_gateway,
+                message="پردازش با موفقیت انجام شد"
             )
 
 
