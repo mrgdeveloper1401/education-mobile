@@ -1,9 +1,8 @@
 import asyncio
-
 from decouple import config
 import httpx
 
-# from apis.utils.custom_exceptions import RequiredCoffeeBazaar
+from apis.utils.custom_exceptions import RequestTimeOut
 
 # ZIBAL
 ZIBAL_API_KEY = config("ZIBAL_API_KEY", cast=str, default="")
@@ -13,12 +12,9 @@ ZIBAL_LAZY_REQUEST_URL = config("ZIBAL_LAZY_REQUEST_URL", cast=str, default="")
 ZIBAL_VERIFY_URL = config("ZIBAL_VERIFY_URL", cast=str)
 
 # coffee bazaar
-# BAZAAR_REDIRECT_CLIENT_URL = config("BAZAAR_REDIRECT_CLIENT_URL", cast=str, default="")
-# BAZAAR_REDIRECT_CLIENT_SECRET = config("BAZAAR_REDIRECT_CLIENT_SECRET", cast=str, default="")
-# BAZAAR_REDIRECT_CLIENT_ID = config("BAZAAR_REDIRECT_CLIENT_ID", cast=str, default="")
-# BAZAAR_TOKEN_API_KEY = config("BAZAAR_TOKEN_API_KEY", cast=str, default="")
 BAZAAR_PAY_URL = config("BAZAAR_PAY_URL", cast=str, default="")
 BAZAAR_PAY_REDIRECT_URL = config("BAZAAR_REDIRECT_CLIENT_URL", cast=str)
+
 
 class Gateway:
     def __init__(self):
@@ -96,7 +92,10 @@ async def bazaar(
         "service_name": service_name,
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url=url, headers=headers, json=json)
+        try:
+            response = await client.post(url=url, headers=headers, json=json, timeout=10)
+        except httpx.ConnectTimeout:
+            raise RequestTimeOut()
     res = response.json()
     payment_url = res["payment_url"]
 

@@ -101,3 +101,9 @@ class GatewayNotFound(APIException):
 class InvalidIpGateway(APIException):
     status_code = 403
     default_code = "invalid_ip"
+
+
+class RequestTimeOut(APIException):
+    status_code = 400
+    default_detail = "request time out"
+    default_code = "request_time_out"
