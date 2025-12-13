@@ -84,3 +84,9 @@ class ExamIsOpenException(APIException):
     status_code = 400
     default_detail = "ازمون قبلی باز هست"
     default_code = "exam_is_open"
+
+
+class RequiredCoffeeBazaar(APIException):
+    status_code = 400
+    default_detail = "قیمت و سرویس و مقصد اجباری هست"
+    default_code = "required_cofee_bazaar"

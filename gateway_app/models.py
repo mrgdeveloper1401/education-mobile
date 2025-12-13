@@ -19,12 +19,28 @@ class Gateway(CreateMixin, UpdateMixin, ActiveMixin):
     result_gateway = models.PositiveSmallIntegerField(blank=True, null=True)
     message_gateway = models.CharField(max_length=255, blank=True, null=True)
     track_id = models.CharField(max_length=20, blank=True, null=True)
+    gateway_name = models.CharField(max_length=255, blank=True, null=True)
+    checkout_token = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = "gateway"
         ordering = ("id",)
         verbose_name_plural = _("درخواست های پرداخت")
         verbose_name = _("درخواست پرداخت")
+
+    def bazaar_pay_payment_url(self):
+        if self.gateway_name == "bazaar" and self.checkout_token:
+            url = f"https://app.bazaar-pay.ir/payment?token={self.checkout_token}"
+            return url
+        else:
+            return None
+
+    @property
+    def is_bazaar_pay_payment(self):
+        if self.checkout_token and self.gateway_name == "bazaar":
+            return True
+        else:
+            return False
 
 
 class ResultGateway(CreateMixin, UpdateMixin, ActiveMixin):

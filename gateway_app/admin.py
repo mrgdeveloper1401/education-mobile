@@ -14,13 +14,15 @@ class GatewayAdmin(admin.ModelAdmin):
         "subscription_id",
         "is_complete",
         "track_id",
-        "is_active"
+        "is_active",
+        "is_bazaar_pay_payment"
     )
     list_filter = ("is_complete", "is_active")
     list_per_page = 20
     search_fields = ("user__mobile_phone",)
     search_help_text = _("برای جست و جو میتوانید از شماره موبایل استفاده کنید")
     list_display_links = ("id", "user_id", "subscription_id", "get_user_phone")
+    list_editable = ("is_active", "is_complete")
 
     def get_user_phone(self, obj):
         return obj.user.mobile_phone
@@ -35,6 +37,7 @@ class GatewayAdmin(admin.ModelAdmin):
                 "is_complete",
                 "track_id",
                 "is_active",
+                "checkout_token"
             )
         else:
             return qs
