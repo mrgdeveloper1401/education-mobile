@@ -107,3 +107,9 @@ class RequestTimeOut(APIException):
     status_code = 400
     default_detail = "request time out"
     default_code = "request_time_out"
+
+
+class SubscriptionAlreadyExists(APIException):
+    status_code = 403
+    default_detail = "شما از قبل اشتراک فعال دارید"
+    default_code = "subscription_already_exists"

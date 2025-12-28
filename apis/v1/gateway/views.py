@@ -6,7 +6,7 @@ from adrf.views import APIView
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, viewsets, views
 from rest_framework.exceptions import NotFound, NotAcceptable, PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
@@ -16,7 +16,8 @@ from gateway_app.models import Gateway as GatewayModel, ResultGateway
 from subscription_app.models import SubscriptionPlan, UserSubscription
 from .serializer import GatewaySerializer, ListRetrieveGatewaySerializer, ListRetrieveResultGateWaySerializer
 from ...utils.custom_exceptions import PlanAlreadyExistsException, TooManyRequests, PaymentTooManyRequests, \
-    AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound, GatewayNotFound, InvalidIpGateway
+    AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound, GatewayNotFound, InvalidIpGateway, \
+    SubscriptionAlreadyExists
 from ...utils.custom_pagination import TwentyPageNumberPagination
 from ...utils.custom_permissions import AsyncIsAuthenticated
 from ...utils.custom_response import response
@@ -389,3 +390,20 @@ class ListRetrieveResultGateWayViewSet(mixins.RetrieveModelMixin, mixins.ListMod
             gateway__is_active=True,
             is_active=True,
         ).only(*fields)
+
+
+class CheckSubscriptionView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        user_sub = UserSubscription.objects.filter(user_id=request.user.id).only("id").active_plan()
+        if user_sub:
+            raise SubscriptionAlreadyExists()
+        else:
+            return response(
+                message="شما هیچ اشتراک فعالی ندارید",
+                status_code=202,
+                error=False,
+                status=True,
+                data={}
+            )

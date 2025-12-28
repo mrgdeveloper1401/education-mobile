@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from core_app.models import CreateMixin, UpdateMixin, ActiveMixin
+from subscription_app.managers import SubManager
 
 
 class SubscriptionPlan(CreateMixin, UpdateMixin, ActiveMixin):
@@ -87,6 +88,8 @@ class UserSubscription(CreateMixin, UpdateMixin, ActiveMixin):
         blank=True,
         null=True
     )
+
+    objects = SubManager()
 
     class Meta:
         db_table = 'user_subscription'

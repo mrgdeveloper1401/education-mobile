@@ -141,6 +141,7 @@ class SubscriptionPlanAdmin(admin.ModelAdmin):
 
 @admin.register(UserSubscription)
 class UserSubscriptionAdmin(admin.ModelAdmin):
+    list_editable = ("is_active",)
     raw_id_fields = ("user", "plan")
     ordering = ("-id",)
     inlines = (UserInstallmentInline,)
