@@ -11,11 +11,11 @@ from subscription_app.models import UserSubscription
 
 
 class RequestOtpSerializer(AdrfSerializer):
-    mobile_phone = serializers.CharField()
+    mobile_phone = serializers.CharField(validators=(MobileRegexValidator(),))
 
 
 class OtpVerifySerializer(AdrfSerializer):
-    mobile_phone = serializers.CharField()
+    mobile_phone = serializers.CharField(validators=(MobileRegexValidator(),))
     otp = serializers.CharField()
 
 
