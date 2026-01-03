@@ -113,3 +113,8 @@ class SubscriptionAlreadyExists(APIException):
     status_code = 403
     default_detail = "شما از قبل اشتراک فعال دارید"
     default_code = "subscription_already_exists"
+
+
+class RedisSetException(APIException):
+    status_code = 400
+    default_code = "invalid_set_redis"

@@ -2,9 +2,7 @@ import datetime
 import time
 import random
 
-from django.contrib.auth import authenticate
-from django.db.models import Prefetch, Sum, Q
-from django.db.models.functions import Coalesce
+from django.db.models import Prefetch
 from pytz import timezone as pytz_timezone
 from django.core.cache import cache
 from adrf.views import APIView as AsyncAPIView
@@ -32,7 +30,7 @@ from .serializers import (
 from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, AsyncIsAuthenticated, NotAuthenticate
 from apis.utils.custom_response import response
 from base.settings import SIMPLE_JWT
-from ...utils.custom_exceptions import UserBlockException
+from ...utils.custom_exceptions import UserBlockException, RedisSetException
 from ...utils.custom_ip import get_client_ip
 
 
@@ -57,7 +55,10 @@ class RequestOtpView(AsyncAPIView):
         get_ip = get_client_ip(request)
         random_code = random.randint(100000, 999999)
         redis_key = f'{phone}_{get_ip}_{random_code}'
-        await cache.aset(redis_key, random_code, timeout=120)
+        try:
+            await cache.aset(redis_key, random_code, timeout=120)
+        except Exception as e:
+            raise RedisSetException(detail=str(e))
 
         # send otp sms
         sms = SendSms()
