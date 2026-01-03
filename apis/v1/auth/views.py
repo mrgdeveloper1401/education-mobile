@@ -33,6 +33,7 @@ from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, 
 from apis.utils.custom_response import response
 from base.settings import SIMPLE_JWT
 from ...utils.custom_exceptions import UserBlockException
+from ...utils.custom_ip import get_client_ip
 
 
 class RequestOtpView(AsyncAPIView):
@@ -53,7 +54,7 @@ class RequestOtpView(AsyncAPIView):
             await Student.objects.acreate(user_id=user.id)
 
         # set key in redis
-        get_ip = request.META.get('REMOTE_ADDR', "X-FORWARDED-FOR")
+        get_ip = get_client_ip(request)
         random_code = random.randint(100000, 999999)
         redis_key = f'{phone}_{get_ip}_{random_code}'
         await cache.aset(redis_key, random_code, timeout=120)
@@ -88,7 +89,7 @@ class OtpVerifyView(AsyncAPIView):
         otp = serializer.validated_data['otp']
 
         # get in redis
-        get_ip = request.META.get('REMOTE_ADDR', "X-FORWARDED-FOR")
+        get_ip = get_client_ip(request)
         redis_key = f'{phone}_{get_ip}_{otp}'
         get_redis_key = await cache.aget(redis_key)
         if get_redis_key is None:
