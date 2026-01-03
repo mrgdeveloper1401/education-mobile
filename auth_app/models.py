@@ -109,7 +109,7 @@ class City(ActiveMixin):
         db_table = "city"
 
 
-class Coach(CreateMixin, UpdateMixin, ActiveMixin):
+class Coach(CreateMixin, UpdateMixin):
     user = models.OneToOneField(
         User,
         on_delete=models.PROTECT,
@@ -129,7 +129,7 @@ class Coach(CreateMixin, UpdateMixin, ActiveMixin):
         db_table = 'coach'
 
 
-class Student(CreateMixin, UpdateMixin, ActiveMixin):
+class Student(CreateMixin, UpdateMixin):
     user = models.OneToOneField(
         User,
         on_delete=models.PROTECT,

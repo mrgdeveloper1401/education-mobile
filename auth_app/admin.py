@@ -134,10 +134,8 @@ class CoachAdmin(admin.ModelAdmin):
         'coach_number',
         'get_coach_name',
         'get_coach_phone',
-        'is_active',
         'created_at'
     )
-    list_filter = ('is_active',)
     search_fields = (
         'coach_number',
         'user__mobile_phone'
@@ -150,7 +148,6 @@ class CoachAdmin(admin.ModelAdmin):
             'fields': (
                 'user',
                 'coach_number',
-                'is_active'
             )
         }),
         (_('تاریخ‌ها'), {
@@ -167,7 +164,6 @@ class CoachAdmin(admin.ModelAdmin):
             "user__first_name",
             "user__last_name",
             "coach_number",
-            "is_active",
             "created_at",
             "updated_at",
         )
@@ -181,10 +177,8 @@ class StudentAdmin(admin.ModelAdmin):
         'student_name',
         'get_student_phone',
         'referral_code',
-        'is_active',
         'created_at'
     )
-    list_filter = ('is_active', )
     search_help_text = _("برای جست و جو میتوانید از شماره موبایل استفاده کیند")
     search_fields = (
         'user__mobile_phone',
@@ -198,7 +192,6 @@ class StudentAdmin(admin.ModelAdmin):
                 'user',
                 'student_number',
                 'referral_code',
-                'is_active'
             )
         }),
         (_('تاریخ‌ها'), {
@@ -213,7 +206,6 @@ class StudentAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related('user').only(
             "student_number",
             "referral_code",
-            "is_active",
             "created_at",
             "updated_at",
             "user__first_name",

@@ -185,7 +185,7 @@ class CreateStudentExamAttemptSerializer(serializers.Serializer):
     def create(self, validated_data):
         user_id = self.context["request"].user.id
 
-        get_student = Student.objects.filter(is_active=True, user_id=user_id).only("id")
+        get_student = Student.objects.filter(user_id=user_id).only("id")
 
         return StudentExamAttempt.objects.create(
             student_id=get_student.first().id,
@@ -280,7 +280,7 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         status = validated_data.pop("status", None)
 
         # get student
-        get_student = Student.objects.filter(user_id=user_id, is_active=True).only("id").first()
+        get_student = Student.objects.filter(user_id=user_id).only("id").first()
 
         # create student answer
         selected_choices = validated_data.pop("selected_choices", [])

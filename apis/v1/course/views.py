@@ -445,7 +445,7 @@ class ExamDoneView(APIView):
         ).only("id").first()
         if next_section:
             # get student
-            student = Student.objects.filter(user_id=user_id, is_active=True).only("id").first()
+            student = Student.objects.filter(user_id=user_id).only("id").first()
             # create student access section
             StudentAccessSection.objects.create(
                 student_id=student.id,
