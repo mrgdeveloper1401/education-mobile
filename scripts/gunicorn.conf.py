@@ -13,7 +13,7 @@ accesslog = "-"
 
 # Timeouts
 timeout = 30
-keepalive = 5
+keepalive = 1
 graceful_timeout = 30
 
 # Process naming
