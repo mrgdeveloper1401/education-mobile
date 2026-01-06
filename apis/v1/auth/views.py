@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import time
 import random
@@ -34,12 +35,12 @@ from ...utils.custom_exceptions import UserBlockException, RedisSetException
 from ...utils.custom_ip import get_client_ip
 
 
-class RequestOtpView(AsyncAPIView):
+class RequestOtpView(APIView):
     serializer_class = RequestOtpSerializer
-    permission_classes = (AsyncRemoveAuthenticationPermissions,)
+    permission_classes = (NotAuthenticate,)
     throttle_classes = (OtpRateThrottle,)
 
-    async def post(self, request):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -47,22 +48,20 @@ class RequestOtpView(AsyncAPIView):
         phone = serializer.validated_data['mobile_phone']
 
         # get or create user
-        user, created = await User.objects.aget_or_create(mobile_phone=phone)
-        if created:
-            await Student.objects.acreate(user_id=user.id)
+        check_user =  User.objects.only("id").filter(mobile_phone=phone).first()
+        if not check_user:
+            user = User.objects.create_user(mobile_phone=phone)
+            Student.objects.acreate(user_id=user.id)
 
         # set key in redis
         get_ip = get_client_ip(request)
         random_code = random.randint(100000, 999999)
         redis_key = f'{phone}_{get_ip}_{random_code}'
-        try:
-            await cache.aset(redis_key, random_code, timeout=120)
-        except Exception as e:
-            raise RedisSetException(detail=str(e))
+        cache.set(redis_key, random_code, timeout=120)
 
         # send otp sms
         sms = SendSms()
-        await sms.send_otp_sms(user.mobile_phone, random_code)
+        asyncio.run(sms.send_otp_sms(phone, random_code))
 
         # return response
         data = {

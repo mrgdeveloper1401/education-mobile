@@ -10,7 +10,7 @@ from auth_app.validators import MobileRegexValidator
 from subscription_app.models import UserSubscription
 
 
-class RequestOtpSerializer(AdrfSerializer):
+class RequestOtpSerializer(serializers.Serializer):
     mobile_phone = serializers.CharField(validators=(MobileRegexValidator(),))
 
 
