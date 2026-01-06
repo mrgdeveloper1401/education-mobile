@@ -13,7 +13,7 @@ class User(AbstractBaseUser, UpdateMixin, CreateMixin, PermissionsMixin, ActiveM
     mobile_phone = models.CharField(_("mobile phone"), max_length=15, unique=True)
     first_name = models.CharField(_("first name"), max_length=30, blank=True, null=True)
     last_name = models.CharField(_("last name"), max_length=30, blank=True, null=True)
-    email = models.EmailField(_("email address"), unique=True, null=True, blank=True)
+    email = models.EmailField(_("email address"), null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     password = models.CharField(_("password"), max_length=128, blank=True, null=True)
