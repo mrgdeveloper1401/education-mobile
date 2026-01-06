@@ -199,17 +199,25 @@ if USE_SSL_CONFIG:
     # Frame & Clickjacking Protection
     X_FRAME_OPTIONS = "DENY" # prevent show iframe
 
-
 # cache config
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "OPTIONS": {
             "SERIALIZER": config("SERIALIZER", cast=str, default="django_redis.serializers.msgpack.MSGPackSerializer"),
+            "SOCKET_CONNECT_TIMEOUT": config("SOCKET_DEFAULT_CONNECT_TIMEOUT", default=5, cast=int),
+            "SOCKET_TIMEOUT": config("SOCKET_DEFAULT_TIMEOUT", default=5, cast=int),
+            "COMPRESSOR": config("REDIS_DEFAULT_COMPRESSOR", default="django_redis.compressors.zlib.ZlibCompressor"),
+            "TIMEOUT": config("CACHE_DEFAULT_TIMEOUT", cast=int, default=1209600),
+            "COMPRESSOR_KWARGS": {
+                "level": config("COMPRESSOR_DEFAULT_LEVEL_ARGS", default=6, cast=int)
+            },
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "CONNECTION_POOL_KWARGS": {
                 "max_connections": config("REDIS_CONNECTION_MAX_CONNECTIONS", cast=int, default=100),
-                "retry_on_timeout": True
+                "retry_on_timeout": config("REDIS_DEFAULT_POOL_RETRY_TIMEOUT", default=True, cast=bool),
+                "health_check_interval": config("REDIS_DEFAULT_HEALTH_CHECK_INTERVAL", default=True, cast=bool),
+                "socket_keepalive": config("REDIS_DEFAULT_SOCKET_KEEPALIVE", default=True, cast=bool),
             }
         }
     }
