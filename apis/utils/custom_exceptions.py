@@ -118,3 +118,9 @@ class SubscriptionAlreadyExists(APIException):
 class RedisSetException(APIException):
     status_code = 400
     default_code = "invalid_set_redis"
+
+
+class EmailAlreadyExists(APIException):
+    status_code = 400
+    default_detail = "ایمیل کاربری از قبل وجود دارد"
+    default_code = "email_already_exists"

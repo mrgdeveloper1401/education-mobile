@@ -14,6 +14,7 @@ urlpatterns = [
     path('token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
     path("request_otp_phone/", views.RequestOtpView.as_view(), name='request_otp_phone'),
     path("login_by_phone_password/", views.LoginByPhonePasswordView.as_view(), name='login_by_phone_password'),
+    path("signup_user/", views.UserSignUpView.as_view(), name='signup_user'),
     path("otp_verify/", views.OtpVerifyView.as_view(), name='otp_verify'),
     path('upload_photo_by_user/', views.UploadImageView.as_view(), name='upload_photo_by_user'),
 ] + router.urls

@@ -26,7 +26,8 @@ from .serializers import (
     OtpVerifySerializer,
     ProfileSerializer,
     UploadImageSerializer,
-    LogInByPhoneSerializer
+    LogInByPhoneSerializer,
+    SignupSerializer
 )
 from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, AsyncIsAuthenticated, NotAuthenticate
 from apis.utils.custom_response import response
@@ -218,8 +219,8 @@ class LoginByPhonePasswordView(APIView):
         elif user.check_password(password) is False:
             raise NotFound("نام کاربری و رمز عبور اشتباه هست")
         else:
-            token =  RefreshToken.for_user(user)
-            iran_timezone = pytz_timezone("Asia/Tehran")
+            token =  RefreshToken.for_user(user) # create token
+            iran_timezone = pytz_timezone("Asia/Tehran") # choose timezone
             expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
             expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
             data = {
@@ -238,3 +239,33 @@ class LoginByPhonePasswordView(APIView):
                 status_code=200,
                 data=data
             )
+
+
+class UserSignUpView(APIView):
+    serializer_class = SignupSerializer
+    permission_classes = (NotAuthenticate,)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        token = RefreshToken.for_user(user)
+        iran_timezone = pytz_timezone("Asia/Tehran")  # choose timezone
+        expire_timestamp = int(time.time()) + SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].seconds
+        expire_date = datetime.datetime.fromtimestamp(expire_timestamp, tz=iran_timezone)
+        data = {
+            "mobile": user.mobile_phone,
+            "access_token": str(token.access_token),
+            "refresh_token": str(token),
+            "jwt": "Bearer",
+            "expire_timestamp_access_token": expire_timestamp,
+            "expire_date_access_token": expire_date
+        }
+        return response(
+            status=True,
+            status_code=201,
+            data=data,
+            error=False,
+            message="پردازش با موفقیت انجام شد",
+        )

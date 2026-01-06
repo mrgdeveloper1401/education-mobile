@@ -13,16 +13,17 @@ services:
       - POSTDB_NAME=${POSTDB_NAME}
       - POSTDB_USER=${POSTDB_USER}
     healthcheck:
-      test: ['CMD', "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "pg_isready -U postgres -d ${POSTDB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   backend:
     env_file: ".env"
     container_name: django
     volumes:
-      - static_files:/home/app/static
+      - static_files:/home/app/staticfiles
     build:
       context: .
       dockerfile: dockerfile/prod/Dockerfile
@@ -31,8 +32,6 @@ services:
       - 8000
     ports:
       - "8000:8000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   redis:
     container_name: education_mobile_redis
@@ -44,10 +43,11 @@ services:
       - "6379:6379"
     command: redis-server --loglevel warning --appendonly no
     healthcheck:
-      test: ['CMD', "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   nginx:
     container_name: education_mobile_nginx
@@ -63,11 +63,11 @@ services:
       - static_files:/var/www/static
       - /etc/letsencrypt:/etc/letsencrypt:ro
     healthcheck:
-      test: ['CMD', "nginx", "-t"]
+      test: ["CMD", "nginx", "-t"]
       interval: 30s
       timeout: 10s
       retries: 3
-
+      start_period: 40s
 
 volumes:
   static_files:

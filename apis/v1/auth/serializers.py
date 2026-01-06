@@ -4,6 +4,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
+from apis.utils.custom_exceptions import EmailAlreadyExists
 from auth_app.models import User
 from core_app.models import Photo
 from auth_app.validators import MobileRegexValidator
@@ -113,3 +114,34 @@ class UploadImageSerializer(AdrfModelSerializer):
 class LogInByPhoneSerializer(serializers.Serializer):
     mobile_phone = serializers.CharField(validators=(MobileRegexValidator(),),)
     password = serializers.CharField()
+
+
+class SignupSerializer(serializers.ModelSerializer):
+    confirm_password = serializers.CharField()
+    mobile_phone = serializers.CharField(validators=(MobileRegexValidator(), ))
+
+    class Meta:
+        model = User
+        fields = (
+            "mobile_phone",
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+            "confirm_password",
+        )
+
+    def validate_email(self, data):
+        user = User.objects.filter(email=data).only("id")
+        if user.exists():
+            raise EmailAlreadyExists()
+        return data
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError("پسورد یکی نیست")
+        return attrs
+
+    def create(self, validated_data):
+        del validated_data['confirm_password']
+        return User.objects.create_user(**validated_data)
