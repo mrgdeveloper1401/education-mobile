@@ -18,7 +18,7 @@ class SubscriptionPlan(CreateMixin, UpdateMixin, ActiveMixin):
     name = models.CharField(_("نام پلن"), max_length=100)
     duration = models.IntegerField(_("مدت زمان (ماه)"), choices=DURATION_CHOICES)
     original_price = models.BigIntegerField(_("قیمت اصلی (تومان)"))
-    discounted_price = models.BigIntegerField(_("قیمت با تخفیف (تومان)"))
+    discounted_price = models.BigIntegerField(_("قیمت با تخفیف (تومان)"), default=0)
     image = models.ForeignKey(
         'core_app.Photo',
         on_delete=models.PROTECT,

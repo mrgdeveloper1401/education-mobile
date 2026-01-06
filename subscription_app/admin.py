@@ -48,6 +48,7 @@ class UserInstallmentInline(admin.TabularInline):
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):
+    list_editable = ("is_active", "original_price")
     form = SubscriptionPlanAdminForm
     inlines = (InstallmentPlanInline,)
     list_display_links = ("id", 'name')
