@@ -1,5 +1,4 @@
 import os
-import socket
 from datetime import timedelta
 from pathlib import Path
 from decouple import config, Csv
@@ -41,14 +40,14 @@ INSTALLED_APPS = [
     "mptt",
 
     # app
-    "auth_app",
-    "core_app",
-    "course_app",
-    "exam_app",
-    "subscription_app",
-    "challenge_app",
-    "gateway_app",
-    "discount_app"
+    "apps.auth_app.apps.AuthAppConfig",
+    "apps.core_app.apps.CoreAppConfig",
+    "apps.course_app.apps.CourseAppConfig",
+    "apps.exam_app.apps.ExamAppConfig",
+    "apps.subscription_app.apps.SubscriptionAppConfig",
+    "apps.challenge_app.apps.ChallengeAppConfig",
+    "apps.gateway_app.apps.GatewayAppConfig",
+    "apps.discount_app.apps.DiscountAppConfig",
 ]
 
 MIDDLEWARE = [
@@ -85,7 +84,11 @@ if USE_CORS:
     MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
     CORS_ALLOWED_ORIGINS = config("PRODUCTION_CORS_ALLOWED_ORIGINS", cast=Csv(), default=None)
 
-ASGI_APPLICATION = "base.asgi.application"
+USE_ASGI = config('USE_ASGI', cast=bool, default=False)
+if USE_ASGI:
+    ASGI_APPLICATION = "base.asgi.application"
+else:
+    WSGI_APPLICATION = "base.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -128,7 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = config("LANGUAGE_CODE", cast=str, default="en-us")
 
-TIME_ZONE = config("TIME_ZONE", cast=str, default="UTC")
+TIME_ZONE = config("TIME_ZONE", cast=str, default="Asia/Tehran")
 
 USE_I18N = True
 
@@ -153,18 +156,8 @@ if SHOW_DEBUGGER_TOOLBAR:
     MIDDLEWARE += [
         "debug_toolbar.middleware.DebugToolbarMiddleware"
     ]
-    INTERNAL_IPS = config("INTERNAL_IPS", cast=Csv(), default=["127.0.0.1"])
+    INTERNAL_IPS = config("INTERNAL_IPS", cast=Csv(), default="127.0.0.1")
 
-    # get ip
-    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-    INTERNAL_IPS += ips
-
-    def show_toolbar(request):
-        return SHOW_DEBUGGER_TOOLBAR
-
-    DEBUG_TOOLBAR_CONFIG = {
-        "SHOW_TOOLBAR_CALLBACK": show_toolbar,
-    }
 
 USE_SSL_CONFIG = config("USE_SSL_CONFIG", cast=bool, default=False)
 if USE_SSL_CONFIG:
@@ -214,7 +207,7 @@ CACHES = {
             },
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "CONNECTION_POOL_KWARGS": {
-                "max_connections": config("REDIS_CONNECTION_MAX_CONNECTIONS", cast=int, default=100),
+                "max_connections": config("REDIS_CONNECTION_MAX_CONNECTIONS", cast=int, default=50),
                 "retry_on_timeout": config("REDIS_DEFAULT_POOL_RETRY_TIMEOUT", default=True, cast=bool),
                 "health_check_interval": config("REDIS_DEFAULT_HEALTH_CHECK_INTERVAL", default=True, cast=bool),
                 "socket_keepalive": config("REDIS_DEFAULT_SOCKET_KEEPALIVE", default=True, cast=bool),
@@ -253,10 +246,10 @@ USE_DJANGO_STORAGES = config("USE_DJANGO_STORAGES", cast=bool, default=False)
 if USE_DJANGO_STORAGES:
     STORAGES['default']['BACKEND'] = 'storages.backends.s3.S3Storage'
     # config django storage
-    AWS_ACCESS_KEY_ID = config('ARVAN_AWS_ACCESS_KEY_ID', cast=str, default='salam')
-    AWS_SECRET_ACCESS_KEY = config('ARVAN_AWS_SECRET_ACCESS_KEY', cast=str, default='salam')
-    AWS_STORAGE_BUCKET_NAME = config('ARVAN_AWS_STORAGE_BUCKET_NAME', cast=str, default='salam')
-    AWS_S3_ENDPOINT_URL = config('ARVAN_AWS_S3_ENDPOINT_URL', cast=str, default='http://localhost:8000')
+    AWS_ACCESS_KEY_ID = config('ARVAN_AWS_ACCESS_KEY_ID', cast=str)
+    AWS_SECRET_ACCESS_KEY = config('ARVAN_AWS_SECRET_ACCESS_KEY', cast=str)
+    AWS_STORAGE_BUCKET_NAME = config('ARVAN_AWS_STORAGE_BUCKET_NAME', cast=str)
+    AWS_S3_ENDPOINT_URL = config('ARVAN_AWS_S3_ENDPOINT_URL', cast=str)
     AWS_S3_REGION_NAME = 'us-east-1'
     AWS_DEFAULT_ACL = 'public-read'
     AWS_QUERYSTRING_AUTH = False
@@ -315,7 +308,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'otp': '1/minute',
     },
-'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
 # jwt config
@@ -356,8 +349,8 @@ else:
     SIMPLE_JWT['AUDIENCE'] = config("AUDIENCE", cast=str)
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Your Project API',
-    'DESCRIPTION': 'Your project description',
+    'TITLE': 'codeima mobile',
+    'DESCRIPTION': 'codeima mobile',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
@@ -375,3 +368,18 @@ SESSION_CACHE_ALIAS = config("SESSION_CACHE_ALIAS", cast=str, default="default")
 # gateway
 ZIBAL_API_KEY = config("ZIBAL_API_KEY", cast=str, default="")
 ZIBAL_REDIRECT_URL = config("ZIBAL_REDIRECT_URL", cast=str, default="")
+
+# celery config
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', cast=str, default="redis://localhost:6381/5")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", cast=str, default="redis://localhost:6381/6")
+CELERY_TIMEZONE = config("CELERY_TIMEZONE", cast=str, default=TIME_ZONE)
+# CELERY_TASK_TRACK_STARTED = config("CELERY_TASK_TRACK_STARTED", cast=bool, default=True)
+# CELERY_RESULT_EXPIRES = config("CELERY_RESULT_EXPIRES", cast=int, default=7200)
+# CELERY_TASK_TIME_LIMIT = config("CELERY_TASK_TIME_LIMIT", cast=int, default=60)
+CELERY_TASK_IGNORE_RESULT = config("CELERY_TASK_IGNORE_RESULT", cast=bool, default=True)
+CELERY_ACCEPT_CONTENT = config("CELERY_ACCEPT_CONTENT", cast=Csv(), default="json")
+CELERY_TASK_SERIALIZER = config("CELERY_TASK_SERIALIZER", cast=str, default="json")
+CELERY_RESULT_SERIALIZER = config("CELERY_RESULT_SERIALIZER", cast=str, default="json")
+CELERY_TASK_ACKS_LATE = config("CELERY_TASK_ACKS_LATE", cast=bool, default=False)
+CELERY_WORKER_PREFETCH_MULTIPLIER = config("WORKER_PREFETCH_MULTIPLIER", cast=int, default=1)
+CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", cast=bool, default=False)

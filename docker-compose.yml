@@ -13,7 +13,23 @@ services:
       - POSTDB_NAME=${POSTDB_NAME}
       - POSTDB_USER=${POSTDB_USER}
     healthcheck:
-      test: ["CMD", "pg_isready -U postgres -d ${POSTDB_NAME}"]
+      test: ["CMD", "pg_isready -U ${POSTDB_USER} -d ${POSTDB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    container_name: education_mobile_redis
+    image: docker.arvancloud.ir/redis:8.2-alpine
+    restart: always
+    expose:
+      - 6379
+    ports:
+      - "6379:6379"
+    command: redis-server --loglevel warning --appendonly no --maxclients 1000
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -26,28 +42,21 @@ services:
       - static_files:/home/app/staticfiles
     build:
       context: .
-      dockerfile: dockerfile/prod/Dockerfile
+      dockerfile: dockerfile/prod/django/Dockerfile
     restart: always
     expose:
       - 8000
     ports:
       - "8000:8000"
 
-  redis:
-    container_name: education_mobile_redis
-    image: docker.arvancloud.ir/redis:8.2-alpine
+  celery:
+    env_file: ".env"
+    container_name: celery
+    build:
+      context: .
+      dockerfile: dockerfile/prod/django/Dockerfile
     restart: always
-    expose:
-      - 6379
-    ports:
-      - "6379:6379"
-    command: redis-server --loglevel warning --appendonly no
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    entrypoint: "celery -A base.utils.dj_celery worker -l INFO"
 
   nginx:
     container_name: education_mobile_nginx

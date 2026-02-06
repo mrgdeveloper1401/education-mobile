@@ -1,5 +1,5 @@
-from course_app.models import LessonCourse, StudentAccessSection, Section
-from auth_app.models import Student
+from apps.course_app.models import LessonCourse, StudentAccessSection, Section
+from apps.auth_app.models import Student
 
 
 def grant_mobile_sections_access(user_id):

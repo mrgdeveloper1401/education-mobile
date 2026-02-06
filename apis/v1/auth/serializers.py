@@ -5,10 +5,10 @@ from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
 from apis.utils.custom_exceptions import EmailAlreadyExists
-from auth_app.models import User
-from core_app.models import Photo
-from auth_app.validators import MobileRegexValidator
-from subscription_app.models import UserSubscription
+from apps.auth_app.models import User
+from apps.core_app.models import Photo
+from apps.auth_app.validators import MobileRegexValidator
+from apps.subscription_app.models import UserSubscription
 
 
 class RequestOtpSerializer(serializers.Serializer):

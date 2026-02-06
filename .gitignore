@@ -15,3 +15,5 @@ general_log_django
 postdb.env
 .env.backup
 media
+.vscode
+env_folder

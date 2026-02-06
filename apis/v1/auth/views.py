@@ -1,7 +1,6 @@
-import asyncio
 import datetime
+import secrets
 import time
-import random
 
 from django.db.models import Prefetch
 from pytz import timezone as pytz_timezone
@@ -14,13 +13,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import mixins, viewsets
 from asgiref.sync import sync_to_async
 
-from auth_app.models import User, Student
-from base.clasess.send_sms import SendSms
+from apps.auth_app.models import User, Student
 from base.utils.custom_throttle import OtpRateThrottle
 from base.utils.grand_section_access import grant_mobile_sections_access
-from challenge_app.models import UserChallengeScore
-from core_app.models import Photo
-from subscription_app.models import UserSubscription
+from apps.challenge_app.models import UserChallengeScore
+from apps.core_app.models import Photo
+from apps.subscription_app.models import UserSubscription
 from .serializers import (
     RequestOtpSerializer,
     OtpVerifySerializer,
@@ -32,8 +30,9 @@ from .serializers import (
 from apis.utils.custom_permissions import AsyncRemoveAuthenticationPermissions, AsyncIsAuthenticated, NotAuthenticate
 from apis.utils.custom_response import response
 from base.settings import SIMPLE_JWT
-from ...utils.custom_exceptions import UserBlockException, RedisSetException
+from ...utils.custom_exceptions import UserBlockException
 from ...utils.custom_ip import get_client_ip
+from apps.auth_app.tasks import send_otp_sms_celery
 
 
 class RequestOtpView(APIView):
@@ -56,13 +55,12 @@ class RequestOtpView(APIView):
 
         # set key in redis
         get_ip = get_client_ip(request)
-        random_code = random.randint(100000, 999999)
+        random_code = ''.join(str(secrets.randbelow(10)) for _ in range(6))
         redis_key = f'{phone}_{get_ip}_{random_code}'
         cache.set(redis_key, random_code, timeout=120)
 
-        # send otp sms
-        sms = SendSms()
-        asyncio.run(sms.send_otp_sms(phone, random_code))
+        # send otp sms by celery
+        send_otp_sms_celery.delay(phone, random_code)
 
         # return response
         data = {

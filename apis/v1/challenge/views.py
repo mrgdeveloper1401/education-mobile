@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 
-from challenge_app.models import Challenge, ChallengeSubmission
+from apps.challenge_app.models import Challenge, ChallengeSubmission
 from .filters import ChallengeFilter
 from .serializers import ListChallengeSerializer, DetailChallengeSerializer, SubmitChallengeSerializer
 from ...utils.custom_pagination import ScrollPagination

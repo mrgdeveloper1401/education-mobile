@@ -17,4 +17,4 @@ keepalive = 1
 graceful_timeout = 30
 
 # Process naming
-proc_name = "django_asgi"
+proc_name = "django_wsgi"

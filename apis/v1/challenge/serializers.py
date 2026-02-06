@@ -5,7 +5,7 @@ from rest_framework.exceptions import NotFound
 
 from apis.utils.custom_exceptions import ChallengeBlockedException, ChallengeBlockTwoException, \
     PreventSendSubmitChallengeException
-from challenge_app.models import Challenge, ChallengeSubmission, UserChallengeScore
+from apps.challenge_app.models import Challenge, ChallengeSubmission, UserChallengeScore
 
 
 class ListChallengeSerializer(serializers.ModelSerializer):

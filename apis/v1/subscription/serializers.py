@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from subscription_app.models import SubscriptionPlan, InstallmentPlan, UserSubscription
+from apps.subscription_app.models import SubscriptionPlan, InstallmentPlan, UserSubscription
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -42,3 +42,9 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
             "status",
             "transaction_id"
         )
+
+
+class BazarPaySubscriptionSerializer(serializers.Serializer):
+    plan = serializers.PrimaryKeyRelatedField(
+        queryset=SubscriptionPlan.objects.filter(is_active=True).only('id'),
+    )

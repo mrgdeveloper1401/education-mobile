@@ -8,10 +8,10 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from auth_app.models import Student
-from core_app.models import Attachment
-from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
-from course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, CategoryComment, \
+from apps.auth_app.models import Student
+from apps.core_app.models import Attachment
+from apps.exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
+from apps.course_app.models import Category, LessonCourse, Section, StudentAccessSection, SectionVideo, CategoryComment, \
     CommentAttachment
 from .filters import StudentExamAttemptFilter, LessonCourseFilter
 from .serializers import (

@@ -11,9 +11,9 @@ from rest_framework.exceptions import NotFound, NotAcceptable, PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
 from base.clasess.gateway import Gateway, bazaar
-from discount_app.models import Coupon
-from gateway_app.models import Gateway as GatewayModel, ResultGateway
-from subscription_app.models import SubscriptionPlan, UserSubscription
+from apps.discount_app.models import Coupon
+from apps.gateway_app.models import Gateway as GatewayModel, ResultGateway
+from apps.subscription_app.models import SubscriptionPlan, UserSubscription
 from .serializer import GatewaySerializer, ListRetrieveGatewaySerializer, ListRetrieveResultGateWaySerializer
 from ...utils.custom_exceptions import PlanAlreadyExistsException, TooManyRequests, PaymentTooManyRequests, \
     AmountTooManyRequests, CartdIsInvalid, SwitchError, CartNotFound, GatewayNotFound, InvalidIpGateway, \

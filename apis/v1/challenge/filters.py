@@ -1,7 +1,7 @@
 from django.db.models import Exists, OuterRef
 from django_filters.rest_framework import FilterSet, BooleanFilter
 
-from challenge_app.models import Challenge, ChallengeSubmission
+from apps.challenge_app.models import Challenge, ChallengeSubmission
 
 
 class ChallengeFilter(FilterSet):

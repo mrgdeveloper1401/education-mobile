@@ -5,10 +5,10 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from adrf.serializers import ModelSerializer as AdrfModelSerializer
 
 from apis.utils.custom_exceptions import ExamIsOpenException
-from auth_app.models import Student
-from core_app.models import Attachment
-from course_app.models import Category, LessonCourse, Section, SectionVideo, CategoryComment, CommentAttachment
-from exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
+from apps.auth_app.models import Student
+from apps.core_app.models import Attachment
+from apps.course_app.models import Category, LessonCourse, Section, SectionVideo, CategoryComment, CommentAttachment
+from apps.exam_app.models import SectionExam, Question, Choice, StudentExamAttempt, StudentAnswer
 
 
 class ListCategorySerializer(serializers.ModelSerializer):

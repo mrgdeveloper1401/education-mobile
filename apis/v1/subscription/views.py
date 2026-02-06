@@ -1,10 +1,19 @@
-from rest_framework import mixins, viewsets, generics
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+import datetime
+import time
 
-from subscription_app.models import SubscriptionPlan, InstallmentPlan, UserSubscription
-from .serializers import SubscriptionSerializer, InstallmentPlanSerializer, UserSubscriptionSerializer
+from rest_framework import mixins, viewsets, generics, views
+from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+
+from apps.subscription_app.models import SubscriptionPlan, InstallmentPlan, UserSubscription
+from .serializers import (
+    SubscriptionSerializer,
+    InstallmentPlanSerializer,
+    UserSubscriptionSerializer,
+    BazarPaySubscriptionSerializer
+)
 from ...utils.custom_pagination import TwentyPageNumberPagination
+from ...utils.custom_response import response
 
 
 class ListSubscriptionView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -52,3 +61,48 @@ class UserSubscriptionView(generics.ListAPIView):
             "status",
             "transaction_id"
         )
+
+
+class BazarPaymentView(views.APIView):
+    serializer_class = BazarPaySubscriptionSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = BazarPaySubscriptionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # data
+        plan_id = serializer.validated_data["plan"].id
+
+        # check user have subscription
+        user_subscription = UserSubscription.objects.filter(
+            plan_id=plan_id,
+            user_id=request.user.id
+        ).active_plan().only("id")
+        if user_subscription:
+            return response(
+                status=False,
+                message="شما از قبل اشتراک فعال دارید",
+                error=True,
+                data={},
+                status_code=400
+            )
+        else:
+            # create user subscription
+            plan = serializer.validated_data["plan"]
+            days = plan.duration * 30
+            end_data = timezone.now() + datetime.timedelta(days=days)
+            UserSubscription.objects.create(
+                plan_id=plan_id,
+                user_id=request.user.id,
+                start_date=timezone.now(),
+                end_date=end_data,
+                transaction_id=f'bazar_{int(time.time())}'
+            )
+            return response(
+                status=True,
+                message="عملیات با موفقیت انجام شد",
+                data=serializer.data,
+                status_code=201,
+                error=False
+            )

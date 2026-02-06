@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from adrf.serializers import Serializer as AdrfSerializer
 
-from gateway_app.models import Gateway, ResultGateway
+from apps.gateway_app.models import Gateway, ResultGateway
 
 
 class GatewaySerializer(AdrfSerializer):
