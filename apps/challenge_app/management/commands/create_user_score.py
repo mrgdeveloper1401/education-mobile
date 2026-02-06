@@ -2,7 +2,7 @@ from django.core.management import BaseCommand
 from django.db import transaction
 
 from apps.auth_app.models import User
-from apps import UserChallengeScore
+from apps.challenge_app.models import UserChallengeScore
 
 
 class Command(BaseCommand):
